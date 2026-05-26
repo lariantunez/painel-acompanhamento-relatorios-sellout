@@ -4,11 +4,11 @@ Portfolio estatico do projeto **Controle SellOut**, publicado pela conta GitHub 
 
 ## Objetivo
 
-Esta versao foi preparada para GitHub Pages como apresentacao do projeto. A pagina principal nao carrega dados reais, nao consulta planilhas e nao executa a API do Apps Script.
+Esta versao foi preparada para GitHub Pages como apresentacao do projeto. A pagina principal mostra o painel funcionando com dados ficticios e genericos, sem consultar planilhas e sem executar a API do Apps Script.
 
 ## Estrutura
 
-- `index.html`: pagina estatica de portfolio publicada no GitHub Pages.
+- `index.html`: painel publicado no GitHub Pages em modo portfolio, com dados locais ficticios.
 - `apps-script_6.js`: codigo original do backend em Google Apps Script, preservado para consulta.
 - `codigo-original/index-original.html`: copia preservada do painel funcional original.
 - `codigo-original/apps-script_6.js`: copia preservada do Apps Script original.
@@ -31,4 +31,4 @@ Folder: /root
 
 ## Observacao
 
-Os codigos originais foram mantidos no repositorio, mas a pagina publicada foi isolada para funcionar apenas como portfolio estatico.
+Os codigos originais foram mantidos no repositorio, mas a pagina publicada foi isolada para funcionar apenas com dados ficticios locais no GitHub Pages.
