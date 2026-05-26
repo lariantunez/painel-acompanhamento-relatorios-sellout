@@ -1,6 +1,6 @@
 # Painel SellOut
 
-Versao do projeto **Controle SellOut** preparada para publicacao na conta GitHub `lariantulez`.
+Versao do projeto **Controle SellOut** preparada para publicacao na conta GitHub `lariantunez`.
 
 ## Estrutura
 
@@ -9,7 +9,7 @@ Versao do projeto **Controle SellOut** preparada para publicacao na conta GitHub
 
 ## Publicacao no GitHub Pages
 
-1. Criar um repositorio na conta `lariantulez`, por exemplo `painel-sellout`.
+1. Criar um repositorio na conta `lariantunez`, por exemplo `painel-acompanhamento-relatorios-sellout`.
 2. Enviar estes arquivos para a branch principal.
 3. Em `Settings > Pages`, selecionar `Deploy from a branch`.
 4. Publicar a branch `main` na pasta `/root`.
@@ -17,7 +17,7 @@ Versao do projeto **Controle SellOut** preparada para publicacao na conta GitHub
 URL esperada:
 
 ```text
-https://lariantulez.github.io/painel-sellout/
+https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/
 ```
 
 ## Observacao
