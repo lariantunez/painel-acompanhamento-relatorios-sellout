@@ -6,7 +6,7 @@
 // A URL NÃO muda entre versões.
 // ══════════════════════════════════════════════════════════════════
 
-const SHEET_ID = '11tJi_wAACViuVoKmxHsWUGRYbQ9G1oisf767Hph0nJg';
+const SHEET_ID = 'COLE_O_ID_DA_PLANILHA_AQUI';
 
 // Nome exato da aba de representantes
 const ABA_REPRESENTANTES = 'Representantes';
