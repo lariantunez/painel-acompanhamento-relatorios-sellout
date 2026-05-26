@@ -434,14 +434,14 @@ td span.clickable:hover { color: #3f51b5; border-color: #3f51b5; }
   </div>
   <div class="refresh-indicator" id="refresh-indicator" onclick="refreshData()" title="Clique para atualizar dados fict?cios">
     <span class="refresh-dot loading" id="refresh-dot"></span>
-    <span id="refresh-label">Modo portf?lio est?tico</span>
+    <span id="refresh-label">Modo portf&oacute;lio est&aacute;tico</span>
     <span style="opacity:.5;margin-left:2px">· 🔄</span>
   </div>
 </div>
 
 <div id="setup-banner" class="hidden" style="display:none!important">
   <span class="setup-label">⚙️ Apps Script URL:</span>
-  <input id="api-url-input" type="text" placeholder="Conex?o externa desativada no modo portf?lio">
+  <input id="api-url-input" type="text" placeholder="Conex&atilde;o externa desativada no modo portf&oacute;lio">
   <button id="btn-save-url" onclick="saveApiUrl()">✅ Conectar</button>
 </div>
 
@@ -6239,27 +6239,27 @@ const DEMO_SHEETS = [
 
 function buildDemoRows(sheet) {
   const seed = DEMO_SHEETS.findIndex(t => t.sheet === sheet) + 1 || 1;
-  const recebidos = ['Sim', 'N?o', 'Fora do Prazo', 'Sem Vendas'];
-  const situacoes = ['Conclu?do', 'N?o Iniciado', 'Pausado'];
-  const dashboards = ['Dispon?vel', 'Indisponivel', 'Em Andamento'];
+  const recebidos = ['Sim', 'N\u00e3o', 'Fora do Prazo', 'Sem Vendas'];
+  const situacoes = ['Conclu\u00eddo', 'N\u00e3o Iniciado', 'Pausado'];
+  const dashboards = ['Dispon\u00edvel', 'Indisponivel', 'Em Andamento'];
   return Array.from({ length: 86 }, (_, i) => {
     const n = i + 1;
     const rep = ((i + seed) % 8) + 1;
     const demo = ((i * 2 + seed) % 12) + 1;
     const recebido = recebidos[(i + seed) % recebidos.length];
-    const situacao = recebido === 'N?o' ? 'N?o Iniciado' : situacoes[(i + seed * 2) % situacoes.length];
+    const situacao = recebido === 'N\u00e3o' ? 'N\u00e3o Iniciado' : situacoes[(i + seed * 2) % situacoes.length];
     const diaWpp = String(((i + seed) % 27) + 1).padStart(2, '0');
     const diaEmail = String(((i + seed + 5) % 27) + 1).padStart(2, '0');
     return {
-      'Raz?o Social': 'Empresa Ficticia ' + String(n).padStart(3, '0') + ' Ltda',
+      'Raz\u00e3o Social': 'Empresa Ficticia ' + String(n).padStart(3, '0') + ' Ltda',
       'Nome Fantasia': 'Loja Ficticia ' + String(n).padStart(3, '0'),
       'Representante': 'Representante ' + String(rep).padStart(3, '0'),
       'Fluxo Agenda': i % 7 === 0 ? 'Demonstradora 007' : 'Demonstradora ' + String(demo).padStart(3, '0'),
       'Recebido': recebido,
       'Situacao': situacao,
       'Dashboard Totvs': dashboards[(i + seed) % dashboards.length],
-      'Ultima Cobran?a': i % 4 === 0 ? diaWpp + '/04/2026' : '',
-      'Ultima Cobran?a Email': i % 5 === 0 ? diaEmail + '/04/2026' : '',
+      'Ultima Cobran\u00e7a': i % 4 === 0 ? diaWpp + '/04/2026' : '',
+      'Ultima Cobran\u00e7a Email': i % 5 === 0 ? diaEmail + '/04/2026' : '',
     };
   });
 }
@@ -6286,6 +6286,11 @@ function stopAutoRefresh() {
 function updateRefreshIndicator(loading) {
   const dot = document.getElementById('refresh-dot');
   const lbl = document.getElementById('refresh-label');
+  if (PORTFOLIO_STATIC_MODE) {
+    if (dot) dot.classList.remove('loading');
+    if (lbl) lbl.textContent = 'Modo portfólio estático';
+    return;
+  }
   if (dot) { if (loading) dot.classList.add('loading'); else dot.classList.remove('loading'); }
   if (lbl && !loading) {
     lbl.textContent = _lastUpdate ? `Atualizado às ${_lastUpdate}` : 'Tempo real · 5s';
@@ -6337,6 +6342,13 @@ function sheetToLabel(name) {
 }
 
 async function loadSheetList() {
+  if (PORTFOLIO_STATIC_MODE) {
+    TABS = DEMO_SHEETS;
+    activeSheet = TABS[TABS.length - 1].sheet;
+    initMonthSelect();
+    await loadTab(activeSheet);
+    return;
+  }
   if (!API_URL) return;
   try {
     const res = await fetch(`${API_URL}?action=sheets`);
@@ -6367,6 +6379,7 @@ function switchTab(sheet) {
 }
 
 async function fetchData(sheet) {
+  if (PORTFOLIO_STATIC_MODE) return DEMO_DATA[sheet] || [];
   if (!API_URL) throw new Error('URL não configurada.');
   const res = await fetch(`${API_URL}?sheet=${encodeURIComponent(sheet)}&_t=${Date.now()}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -6385,10 +6398,10 @@ async function loadTab(sheet) {
     cache[sheet] = rows; allData = rows;
     document.getElementById('month-info').textContent = `(${rows.length} registros)`;
     renderAll();
-    startAutoRefresh();
+    if (!PORTFOLIO_STATIC_MODE) startAutoRefresh();
   } catch(e) {
     showState('error', e.message);
-    startAutoRefresh();
+    if (!PORTFOLIO_STATIC_MODE) startAutoRefresh();
   }
 }
 
@@ -6396,7 +6409,8 @@ function refreshData() {
   stopAutoRefresh();
   cache = {};
   showState('spinner', 'Atualizando...');
-  loadSheetList();
+  if (PORTFOLIO_STATIC_MODE) loadTab(activeSheet || DEMO_SHEETS[DEMO_SHEETS.length - 1].sheet);
+  else loadSheetList();
 }
 
 // ══════════════════════════════════════════════════════
