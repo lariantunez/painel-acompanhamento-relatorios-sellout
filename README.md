@@ -1,25 +1,34 @@
-# Painel SellOut
+# Painel de Acompanhamento de Relatorios SellOut
 
-Versao do projeto **Controle SellOut** preparada para publicacao na conta GitHub `lariantunez`.
+Portfolio estatico do projeto **Controle SellOut**, publicado pela conta GitHub `lariantunez`.
+
+## Objetivo
+
+Esta versao foi preparada para GitHub Pages como apresentacao do projeto. A pagina principal nao carrega dados reais, nao consulta planilhas e nao executa a API do Apps Script.
 
 ## Estrutura
 
-- `index.html`: painel web publicado no GitHub Pages.
-- `apps-script_6.js`: backend em Google Apps Script usado como API do painel.
+- `index.html`: pagina estatica de portfolio publicada no GitHub Pages.
+- `apps-script_6.js`: codigo original do backend em Google Apps Script, preservado para consulta.
+- `codigo-original/index-original.html`: copia preservada do painel funcional original.
+- `codigo-original/apps-script_6.js`: copia preservada do Apps Script original.
 
-## Publicacao no GitHub Pages
+## Publicacao
 
-1. Criar um repositorio na conta `lariantunez`, por exemplo `painel-acompanhamento-relatorios-sellout`.
-2. Enviar estes arquivos para a branch principal.
-3. Em `Settings > Pages`, selecionar `Deploy from a branch`.
-4. Publicar a branch `main` na pasta `/root`.
-
-URL esperada:
+URL esperada no GitHub Pages:
 
 ```text
 https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/
 ```
 
+Configuracao em `Settings > Pages`:
+
+```text
+Source: Deploy from a branch
+Branch: main
+Folder: /root
+```
+
 ## Observacao
 
-A URL do Apps Script pode continuar a mesma caso a implantacao atual esteja ativa. Se criar uma nova implantacao do Apps Script, atualize a URL no painel.
+Os codigos originais foram mantidos no repositorio, mas a pagina publicada foi isolada para funcionar apenas como portfolio estatico.
