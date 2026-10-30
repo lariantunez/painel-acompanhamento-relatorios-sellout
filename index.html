@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Controle SellOut · Estudo de caso</title>
+  <meta name="description" content="Estudo de caso: painel que acompanha, mês a mês, o recebimento dos relatórios de sell out de cada loja, com backend em Google Apps Script sobre uma planilha Google e cobrança de pendências por WhatsApp e e-mail. Demonstração com dados fictícios.">
+  <meta property="og:title" content="Controle SellOut · da planilha de controle ao painel de cobrança">
+  <meta property="og:description" content="Google Apps Script como API, uma aba por mês, indicadores clicáveis e cobrança registrada na própria planilha.">
+  <meta property="og:image" content="assets/painel-visao.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/estudo.css">
+  <style>
+    /* Identidade do Controle SellOut: azul índigo do cabeçalho do painel. */
+    :root { --accent: #8c9eff; --accent-2: #8c9eff; --on-accent: #0e1014; --accent-wash: rgba(140, 158, 255, 0.12); }
+    :root[data-theme="light"] { --accent: #3949ab; --accent-2: #3949ab; --on-accent: #fff; --accent-wash: rgba(57, 73, 171, 0.09); }
+    @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --accent: #3949ab; --accent-2: #3949ab; --on-accent: #fff; --accent-wash: rgba(57, 73, 171, 0.09); } }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="wrap">
+      <a class="marca" href="#inicio"><i></i>Controle SellOut</a>
+      <nav>
+        <a class="opcional" href="https://lariantunez.github.io/Vitrine-de-projetos/">Vitrine</a>
+        <a class="opcional" href="#c00">Estudo de caso</a>
+        <a class="opcional" href="https://github.com/lariantunez/painel-acompanhamento-relatorios-sellout">Código</a>
+        <a href="painel/">Abrir painel</a>
+        <button class="btn-tema" id="tema" type="button" aria-label="Trocar tema">☀</button>
+      </nav>
+      <span class="progresso"></span>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="abertura">
+      <div class="wrap">
+        <span class="selo-topo"><b>●</b> Projeto real · demonstração com dados fictícios</span>
+        <h1>Da planilha de controle ao painel de <em>cobrança</em>.</h1>
+        <p class="lead">Um painel que acompanha, mês a mês, o recebimento dos relatórios de sell out de cada loja: o que chegou no prazo, o que está atrasado, o que já foi processado e o que já está no BI. Os dados continuam numa planilha Google, servida por um Google Apps Script, e as pendências viram cobranças por WhatsApp e e-mail registradas na própria planilha.</p>
+        <div class="acoes">
+          <a class="btn primario" href="painel/">Explorar o painel →</a>
+          <a class="btn" href="#c00">Ler o estudo de caso</a>
+        </div>
+        <div class="numeros">
+          <div><strong>7</strong><span>funções no Google Apps Script</span></div>
+          <div><strong>9</strong><span>colunas acompanhadas por loja</span></div>
+          <div><strong>16</strong><span>recortes clicáveis nos cartões</span></div>
+          <div><strong>5 s</strong><span>entre uma atualização e outra</span></div>
+          <div><strong>3</strong><span>formatos de exportação: Excel, CSV e PDF</span></div>
+        </div>
+        <figure class="vitrine">
+          <div class="barra-janela"><i></i><i></i><i></i><span>painel/ · Controle SellOut (dados fictícios)</span></div>
+          <img src="assets/painel-visao.jpg" alt="Painel Controle SellOut: seletor de mês, botões de cobrança, aviso e exportação; cartões de total de relatórios, recebidos, concluídos, no BI e relatórios com demonstradora; barra de progresso e tabela de lojas" width="1440" height="900">
+        </figure>
+      </div>
+    </section>
+
+    <div class="wrap livro">
+      <aside class="indice" aria-label="Capítulos">
+        <p>Capítulos</p>
+        <ol>
+          <li><a href="#c00"><b>00</b>O desafio</a></li>
+          <li><a href="#c01"><b>01</b>Decisões</a></li>
+          <li><a href="#c02"><b>02</b>A planilha</a></li>
+          <li><a href="#c03"><b>03</b>Fluxo</a></li>
+          <li><a href="#c04"><b>04</b>Apps Script</a></li>
+          <li><a href="#c05"><b>05</b>Indicadores</a></li>
+          <li><a href="#c06"><b>06</b>Front-end</a></li>
+          <li><a href="#c07"><b>07</b>Cobrança</a></li>
+          <li><a href="#c08"><b>08</b>Produção e demo</a></li>
+        </ol>
+      </aside>
+
+      <div class="capitulos">
+        <!-- 00 -->
+        <section class="capitulo" id="c00">
+          <span class="rotulo-cap">00 · O desafio</span>
+          <h2>Todo mês, uma lista de lojas e uma pergunta: quem já mandou?</h2>
+          <p>Os relatórios de vendas (sell out) de cada loja chegam pelos <strong>representantes comerciais</strong>. Com eles a equipe processa os dados, publica o resultado no BI e calcula a premiação das demonstradoras. O controle fica numa <strong>planilha Google</strong>, com uma linha por loja e uma aba por mês. O painel nasceu para responder rápido às perguntas do fechamento e transformar as pendências em cobrança.</p>
+          <p class="destaque revelar">Quantos relatórios chegaram, quantos estão fora do prazo, quem ainda não mandou e quanto já está no BI? E, para quem falta, cobrar sem montar mensagem por mensagem.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao azul"><span class="num">RECEBIMENTO</span><h4>No prazo, fora do prazo ou sem vendas</h4><p>O status de cada loja no mês, com o que ainda está aguardando separado do resto.</p></div>
+            <div class="cartao verde"><span class="num">PROCESSAMENTO</span><h4>Do relatório ao BI</h4><p>Situação do processamento (concluído, pausado, não iniciado) e disponibilidade no Dashboard Totvs.</p></div>
+            <div class="cartao ambar"><span class="num">COBRANÇA</span><h4>Uma mensagem por representante</h4><p>As lojas pendentes agrupadas por representante, com a cobrança registrada na planilha.</p></div>
+          </div>
+        </section>
+
+        <!-- 01 -->
+        <section class="capitulo" id="c01">
+          <span class="rotulo-cap">01 · Decisões</span>
+          <h2>A planilha continua sendo a fonte. O painel só a torna legível.</h2>
+          <p>A equipe já trabalhava na planilha, e ela continuou sendo o lugar onde o status é atualizado. O painel lê, resume e devolve à planilha só o que ele mesmo produz: a data das cobranças.</p>
+          <div class="grade g2 revelar">
+            <div class="cartao"><span class="num">01</span><h4>Sem banco de dados novo</h4><p>Um Google Apps Script publicado como aplicativo web transforma a planilha em uma API que responde JSON. Não há servidor para manter.</p></div>
+            <div class="cartao"><span class="num">02</span><h4>Uma aba por mês</h4><p>Cada mês é uma aba com nome no padrão <code>AA_Mmm</code> (por exemplo, <code>26_Mar</code>). O painel descobre as abas sozinho e abre no mês mais recente.</p></div>
+            <div class="cartao"><span class="num">03</span><h4>Todo número filtra a tela</h4><p>Cada cartão e cada linha de detalhe é um filtro: um clique liga, outro clique desliga, e a tabela mostra exatamente as lojas daquele número.</p></div>
+            <div class="cartao"><span class="num">04</span><h4>Cobrança deixa rastro</h4><p>Toda cobrança enviada grava data e hora na linha de cada loja do representante, por canal: WhatsApp ou e-mail.</p></div>
+          </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="capitulo" id="c02">
+          <span class="rotulo-cap">02 · A planilha</span>
+          <h2>Abas mensais, uma aba de contatos e nove colunas.</h2>
+          <p>O cabeçalho fica na linha 1 e o Apps Script lê as colunas <strong>pelo nome</strong>, não pela posição. Os contatos dos representantes ficam numa aba separada, <code>Representantes</code>, ligada às abas mensais pelo nome do representante.</p>
+          <figure class="diagrama revelar">
+            <svg viewBox="0 0 960 300" role="img" aria-label="Estrutura: abas mensais à esquerda, Apps Script ao centro, aba Representantes e colunas de cobrança à direita">
+              <path class="liga forte" d="M290 130 C 320 130, 320 140, 350 140"/>
+              <path class="liga" d="M610 125 C 640 125, 640 79, 670 79"/>
+              <path class="liga" d="M610 155 C 640 155, 640 219, 670 219"/>
+              <g class="no fato"><rect x="30" y="40" width="260" height="180" rx="10"/><text x="160" y="70" text-anchor="middle">26_Jan · 26_Fev · 26_Mar</text><text class="sub" x="160" y="94" text-anchor="middle">uma aba por mês · uma linha por loja</text><text class="sub" x="160" y="122" text-anchor="middle">Razão Social · Nome Fantasia</text><text class="sub" x="160" y="140" text-anchor="middle">Representante · Fluxo Agenda</text><text class="sub" x="160" y="158" text-anchor="middle">Recebido · Situacao</text><text class="sub" x="160" y="176" text-anchor="middle">Dashboard Totvs</text><text class="sub" x="160" y="200" text-anchor="middle">+ colunas de cobrança</text></g>
+              <g class="no"><rect x="350" y="100" width="260" height="80" rx="10"/><text x="480" y="132" text-anchor="middle">Apps Script · doGet</text><text class="sub" x="480" y="154" text-anchor="middle">lê por nome de coluna, responde JSON</text></g>
+              <g class="no dim"><rect x="670" y="40" width="260" height="78" rx="10"/><text x="800" y="70" text-anchor="middle">Representantes</text><text class="sub" x="800" y="92" text-anchor="middle">A nome · B telefone · C e-mail</text></g>
+              <g class="no apoio"><rect x="670" y="180" width="260" height="78" rx="10"/><text x="800" y="210" text-anchor="middle">Ultima Cobrança (Email)</text><text class="sub" x="800" y="232" text-anchor="middle">gravadas pelo painel, criadas se faltarem</text></g>
+            </svg>
+            <figcaption>Vermelho: abas mensais com o status de cada loja. Verde: contatos dos representantes. Tracejado: colunas escritas pelo próprio painel.</figcaption>
+          </figure>
+          <div class="tabela-rolagem revelar">
+            <table class="tabela">
+              <thead><tr><th>Coluna</th><th>No painel</th><th>Valores esperados</th><th>Uso</th></tr></thead>
+              <tbody>
+                <tr><td><code>Razão Social</code> · <code>Nome Fantasia</code></td><td>Razão Social · Nome Fantasia</td><td>texto</td><td>Identificam a loja; o nome fantasia vai na mensagem de cobrança</td></tr>
+                <tr><td><code>Representante</code></td><td>Representante</td><td>nome</td><td>Agrupa as pendências e liga à aba de contatos</td></tr>
+                <tr><td><code>Fluxo Agenda</code></td><td>Demonstradora</td><td>nome ou vazio</td><td>Separa os relatórios de lojas com demonstradora</td></tr>
+                <tr><td><code>Recebido</code></td><td>Recebido</td><td><span class="ok">Sim</span> · <span class="alerta">Fora do Prazo</span> · Sem Vendas · Não</td><td>Status do relatório no mês</td></tr>
+                <tr><td><code>Situacao</code></td><td>Situação</td><td>Concluído · Pausado · Não Iniciado</td><td>Andamento do processamento</td></tr>
+                <tr><td><code>Dashboard Totvs</code></td><td>Dash Totvs</td><td>Disponível · Em Andamento · Indisponível</td><td>Se o dado da loja já está no BI</td></tr>
+                <tr><td><code>Ultima Cobrança</code> · <code>Ultima Cobrança Email</code></td><td>Cob. WhatsApp · Cob. Email</td><td>dd/MM/aaaa HH:mm</td><td>Gravadas pelo Apps Script a cada cobrança</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="capitulo" id="c03">
+          <span class="rotulo-cap">03 · Fluxo</span>
+          <h2>Da planilha à tela, e de volta à planilha.</h2>
+          <div class="fluxo revelar" role="img" aria-label="Fluxo: planilha Google, Apps Script, painel no navegador e ações de cobrança que gravam de volta na planilha">
+            <div class="coluna"><b>1 · Planilha Google</b>
+              <div class="item fato">Abas mensais<small>uma linha por loja</small></div>
+              <div class="item dim">Representantes<small>telefone e e-mail</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>2 · Apps Script</b>
+              <div class="item">Lista de abas<small>padrão AA_Mmm</small></div>
+              <div class="item">Linhas da aba<small>objetos com datas formatadas</small></div>
+              <div class="item">Contatos<small>telefones e e-mails</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>3 · Painel</b>
+              <div class="item erp">Cartões e progresso<small>calculados no navegador</small></div>
+              <div class="item erp">Filtros e tabela<small>busca, multisseleção, ordenação</small></div>
+              <div class="item">Atualização a cada 5 s<small>sem perder os filtros</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>4 · Ações</b>
+              <div class="item adv">WhatsApp Web<small>mensagem pronta por representante</small></div>
+              <div class="item adv">Aviso por e-mail<small>assistente em 4 passos</small></div>
+              <div class="item">Registro na planilha<small>data e hora da cobrança</small></div>
+            </div>
+          </div>
+          <p>A leitura é sempre da aba inteira: o Apps Script devolve as linhas como objetos (cabeçalho → valor), descarta as linhas vazias e já formata as datas. Todos os cálculos acontecem no navegador, a partir dessa lista.</p>
+        </section>
+
+        <!-- 04 -->
+        <section class="capitulo" id="c04">
+          <span class="rotulo-cap">04 · Apps Script</span>
+          <h2>Uma URL, seis ações, sete funções.</h2>
+          <p>O backend é um único arquivo de Google Apps Script publicado como aplicativo web. A função <code>doGet</code> recebe o parâmetro <code>action</code> e responde sempre em JSON; erros também voltam como JSON, com a mensagem.</p>
+          <div class="tabela-rolagem revelar">
+            <table class="tabela">
+              <thead><tr><th>Ação</th><th>Função</th><th>O que faz</th></tr></thead>
+              <tbody>
+                <tr><td><code>sheets</code></td><td><code>getSheets</code></td><td>Lista as abas cujo nome segue <code>/^\d{2}_[A-Za-z]{3}$/</code>: só os meses, nunca abas auxiliares</td></tr>
+                <tr><td><em>(padrão)</em> <code>sheet=26_Mar</code></td><td><code>getRows</code></td><td>Devolve as linhas da aba como objetos, com datas em dd/MM/aaaa e sem linhas vazias</td></tr>
+                <tr><td><code>telefones</code></td><td><code>getTelefones</code></td><td>Mapa nome → telefone, a partir das colunas A e B de <code>Representantes</code></td></tr>
+                <tr><td><code>emailsRepresentantes</code></td><td><code>getEmailsRepresentantes</code></td><td>Nomes e e-mails da coluna C, só os que contêm <code>@</code></td></tr>
+                <tr><td><code>registrarCobranca</code></td><td><code>registrarCobranca</code></td><td>Grava data e hora em <code>Ultima Cobrança</code> (WhatsApp)</td></tr>
+                <tr><td><code>registrarCobrancaEmail</code></td><td><code>registrarCobranca</code></td><td>Grava data e hora em <code>Ultima Cobrança Email</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>O registro de uma cobrança segue sempre a mesma sequência:</p>
+          <div class="etapas revelar">
+            <div class="etapa"><div><h4>Valida os parâmetros</h4><p>aba e representante são obrigatórios; sem eles, a resposta é <code>ok: false</code> com o motivo</p></div></div>
+            <div class="etapa"><div><h4>Encontra a coluna do canal pelo nome</h4><p>se a coluna ainda não existe, ela é criada no fim do cabeçalho</p></div></div>
+            <div class="etapa"><div><h4>Procura todas as linhas do representante</h4><p>comparação sem diferenciar maiúsculas de minúsculas</p></div></div>
+            <div class="etapa"><div><h4>Grava data e hora em cada linha</h4><p>no fuso do projeto, formato dd/MM/aaaa HH:mm</p></div></div>
+            <div class="etapa"><div><h4>Força a gravação e responde</h4><p><code>SpreadsheetApp.flush()</code> e retorno com quantas linhas foram gravadas</p></div></div>
+          </div>
+          <div class="grade g2 revelar">
+            <div class="cartao"><h4>Coluna nova sem quebrar nada</h4><p>A cobrança por e-mail chegou depois da de WhatsApp. Como a coluna é localizada pelo nome e criada se faltar, abas antigas continuam funcionando sem ajuste manual.</p></div>
+            <div class="cartao"><h4>Implantação sem trocar a URL</h4><p>Cada alteração vira uma nova versão da mesma implantação, e a URL usada pelo painel continua a mesma.</p></div>
+          </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="capitulo" id="c05">
+          <span class="rotulo-cap">05 · Indicadores</span>
+          <h2>Cinco cartões, cada linha um filtro.</h2>
+          <p>Os indicadores são calculados no navegador a partir das linhas do mês. As regras ficam explícitas no código, e algumas foram decisões de negócio:</p>
+          <div class="grade g2 revelar">
+            <div class="cartao azul"><span class="num">RECEBIDOS</span><h4>Sim + Fora do Prazo</h4><p>Recebido é o que chegou, no prazo ou não. <strong>Sem Vendas</strong> fica fora desse total e aparece em linha própria no cartão de total.</p></div>
+            <div class="cartao vermelho"><span class="num">AGUARDANDO</span><h4>Total − recebidos − sem vendas</h4><p>As lojas que ainda não mandaram nada. São elas que entram na cobrança, marcadas como <code>Não</code> na coluna Recebido.</p></div>
+            <div class="cartao verde"><span class="num">PROCESSAMENTO</span><h4>Concluídos, pausados e pendentes</h4><p>Pendente de processamento é o relatório que já chegou (Sim ou Fora do Prazo) e ainda está como Não Iniciado.</p></div>
+            <div class="cartao violeta"><span class="num">BI</span><h4>Disponível, em andamento, indisponível</h4><p>Quanto do mês já está no Dashboard Totvs, com a grafia com e sem acento de “Indisponível” tratada como a mesma.</p></div>
+          </div>
+          <p>O quinto cartão separa os <strong>relatórios com demonstradora</strong> (coluna <code>Fluxo Agenda</code>): chegaram, pendentes, concluídos, pausados e o percentual recebido. Abaixo dos cartões, uma barra de progresso empilha concluídos, pausados e aguardando, e dois quadros mostram a data do último aviso por e-mail e da última cobrança por WhatsApp, lidas da própria planilha.</p>
+          <p class="destaque revelar">Dezesseis recortes diferentes cabem em cinco cartões, e qualquer um deles vira, com um clique, a lista exata de lojas por trás do número.</p>
+        </section>
+
+        <!-- 06 -->
+        <section class="capitulo" id="c06">
+          <span class="rotulo-cap">06 · Front-end</span>
+          <h2>Uma página, filtros que se somam.</h2>
+          <p>A interface é um único arquivo HTML com CSS e JavaScript puro, sem framework. O filtro dos cartões se soma aos filtros de coluna, e tudo o que está ativo aparece como pílula no topo, com remoção individual ou “Limpar todos”.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao azul"><h4>Busca geral</h4><p>Procura o texto em todas as colunas da linha ao mesmo tempo.</p></div>
+            <div class="cartao azul"><h4>Sete filtros de coluna</h4><p>Multisseleção com busca interna, “Selecionar todos” e “Limpar” em cada lista.</p></div>
+            <div class="cartao azul"><h4>Clique na célula</h4><p>Clicar no nome de um representante, loja ou demonstradora na tabela liga o filtro daquele valor.</p></div>
+            <div class="cartao verde"><h4>Ordenação e páginas</h4><p>Qualquer coluna ordena em ordem alfabética do português; a tabela pagina de 50 em 50.</p></div>
+            <div class="cartao verde"><h4>Atualização silenciosa</h4><p>A cada 5 segundos a aba é relida sem apagar filtros, ordenação nem mudar de mês, com a hora da última atualização no topo.</p></div>
+            <div class="cartao ambar"><h4>Exportação</h4><p>Excel (SheetJS), CSV com BOM e separador ponto e vírgula, ou PDF pela impressão do navegador; com filtros ou a aba inteira.</p></div>
+          </div>
+          <div class="galeria revelar">
+            <figure><img src="assets/painel-filtros.jpg" alt="Painel com o cartão Aguardando e um representante selecionados, pílulas de filtros ativos no topo" loading="lazy" width="1440" height="900"><figcaption>Filtro do cartão + filtro de coluna, com as pílulas ativas no topo.</figcaption></figure>
+            <figure><img src="assets/painel-tabela.jpg" alt="Tabela de lojas com razão social, nome fantasia, representante, demonstradora, recebido, situação, dashboard e datas de cobrança" loading="lazy" width="1440" height="900"><figcaption>Tabela: nove colunas, status em etiquetas coloridas.</figcaption></figure>
+            <figure><img src="assets/painel-cobranca.jpg" alt="Janela de cobranças por WhatsApp com o modelo de mensagem e as lojas pendentes agrupadas por representante" loading="lazy" width="1440" height="900"><figcaption>Cobrança: pendências agrupadas por representante.</figcaption></figure>
+            <figure><img src="assets/painel-exportar.jpg" alt="Janela de exportação com escolha de formato (Excel, CSV ou PDF) e de escopo (com filtros ou todos)" loading="lazy" width="1440" height="900"><figcaption>Exportar: formato e escopo dos dados.</figcaption></figure>
+          </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="capitulo" id="c07">
+          <span class="rotulo-cap">07 · Cobrança</span>
+          <h2>Uma mensagem por representante, não por loja.</h2>
+          <p>O botão “Cobrar Relatórios Pendentes” mostra quantas lojas faltam no mês. Ao abrir, o painel agrupa as lojas aguardando por representante, busca os telefones na aba <code>Representantes</code> e monta uma mensagem com o primeiro nome e a lista das lojas.</p>
+          <div class="etapas revelar">
+            <div class="etapa"><div><h4>Revisão da lista</h4><p>modelo da mensagem, total de representantes e lojas, e aviso de quem está sem telefone (será pulado)</p></div></div>
+            <div class="etapa"><div><h4>Envio guiado</h4><p>“Enviar agora” abre o WhatsApp Web com o número (com 55 na frente) e o texto prontos</p></div></div>
+            <div class="etapa"><div><h4>Registro e próximo</h4><p>“Próximo” grava a cobrança na planilha e passa ao representante seguinte, com barra de progresso</p></div></div>
+            <div class="etapa"><div><h4>Conclusão</h4><p>o último envio grava e fecha o disparo com o total de representantes notificados</p></div></div>
+          </div>
+          <p>O aviso geral aos representantes é por e-mail, num <strong>assistente de 4 passos</strong> que prepara tudo para colar no webmail: destinatários, assunto, corpo e envio. Ao concluir, a cobrança por e-mail é registrada na planilha para cada representante.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao"><span class="num">PRAZO</span><h4>Texto que acompanha o calendário</h4><p>O prazo é o dia 10. O corpo do e-mail muda se o prazo é hoje, amanhã, já passou ou ainda está por vir, e o assunto traz o mês de referência (o mês anterior).</p></div>
+            <div class="cartao"><span class="num">CÓPIA</span><h4>Formatação preservada</h4><p>O corpo é copiado como HTML e texto ao mesmo tempo (<code>ClipboardItem</code>), com duas alternativas caso o navegador não permita.</p></div>
+            <div class="cartao"><span class="num">TEMPO</span><h4>Limite de espera</h4><p>A busca dos e-mails tem limite de 10 segundos (<code>AbortController</code>), com mensagem clara se o Apps Script não responder.</p></div>
+          </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="capitulo" id="c08">
+          <span class="rotulo-cap">08 · Produção e demonstração</span>
+          <h2>Na planilha da equipe; aqui, no navegador.</h2>
+          <div class="arquitetura revelar">
+            <div class="caixa"><span class="tag">Navegador</span><b>Front-end</b><ul><li>HTML, CSS e JS puro</li><li>exporta Excel, CSV e PDF</li></ul></div>
+            <div class="seta">⇄</div>
+            <div class="caixa"><span class="tag">Google Apps Script</span><b>Aplicativo web</b><ul><li><code>doGet</code> com 6 ações</li><li>respostas em JSON</li><li>grava as cobranças</li></ul></div>
+            <div class="seta">⇄</div>
+            <div class="caixa"><span class="tag">Google Planilhas</span><b>Dados</b><ul><li>uma aba por mês</li><li>aba Representantes</li></ul></div>
+          </div>
+          <p>Nesta demonstração não há planilha nem Apps Script. O painel roda em <strong>modo portfólio</strong>: três meses de lojas, representantes e demonstradoras fictícios são gerados no próprio navegador, e a atualização automática fica desligada. Cartões, filtros, tabela, ordenação, exportação e a montagem da cobrança funcionam normalmente; as etapas que dependem do Apps Script (telefones, e-mails e registro das cobranças) não têm de onde buscar dados. O backend original está no repositório, em <code>apps-script_6.js</code>.</p>
+          <h3>Tecnologias</h3>
+          <div class="pilulas">
+            <span>Google Apps Script</span><span>Google Planilhas</span><span>JavaScript sem framework</span><span>HTML e CSS</span><span>SheetJS (XLSX)</span><span>Clipboard API</span><span>WhatsApp Web</span><span>GitHub Pages</span>
+          </div>
+          <div class="encerramento revelar">
+            <span class="rotulo-cap">Experimente</span>
+            <h2>Clique em “Aguardando” e veja quem falta.</h2>
+            <p class="texto">Sugestão de roteiro: no cartão Total, clique em Aguardando; depois clique no nome de um representante na tabela. Abra “Cobrar Relatórios Pendentes” para ver as lojas agrupadas e termine exportando o recorte em Excel.</p>
+            <div class="acoes"><a class="btn primario" href="painel/">Abrir o painel →</a><a class="btn" href="https://github.com/lariantunez/painel-acompanhamento-relatorios-sellout">Ver o código</a></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><strong>Larissa Antunez</strong> · Analytics &amp; Desenvolvimento</span>
+      <span>Projeto real · demonstração com dados fictícios</span>
+    </div>
+  </footer>
+  <script src="assets/estudo.js"></script>
+</body>
+</html>
