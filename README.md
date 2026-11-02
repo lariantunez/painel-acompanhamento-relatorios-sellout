@@ -1,41 +1,49 @@
-# Painel de Acompanhamento de Relatórios SellOut
+# Controle Sell Out
+
+Painel que acompanha, mês a mês, o recebimento dos relatórios de sell out de cada loja: o que chegou no prazo, o que está atrasado, o que já foi processado e o que já está no BI. As pendências viram cobranças por WhatsApp e e-mail, registradas na própria planilha.
 
 **[Ler o estudo de caso](https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/)** · **[Abrir a demo do painel](https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/painel/)**
 
-![Painel Controle SellOut com dados fictícios](assets/painel-visao.jpg)
+![Painel Controle Sell Out com dados fictícios](assets/painel-visao.jpg)
 
-Portfólio estático do projeto **Controle SellOut**, publicado pela conta GitHub `lariantunez`.
+> **Versão de portfólio.** O painel original roda em produção, lendo uma planilha Google real. Esta versão usa dados fictícios locais e não chama a API do Apps Script.
 
-## Objetivo
+## O problema
 
-Esta versão foi preparada para GitHub Pages como apresentação do projeto. A raiz publica o estudo de caso, e a pasta `painel/` mostra o painel funcionando com dados fictícios e genericos, sem consultar planilhas e sem executar a API do Apps Script.
+Todo mês, a equipe precisa saber quais lojas já mandaram o relatório de vendas, quais estão fora do prazo e quanto já está no BI. O controle ficava numa planilha, e cobrar quem faltava significava montar mensagem por mensagem.
+
+## O que eu construí
+
+- **API sobre a planilha:** um Google Apps Script publicado como aplicativo web transforma a planilha em uma API JSON, sem servidor para manter.
+- **Cartões que filtram a tela:** 16 recortes clicáveis, e cada número mostra exatamente as lojas por trás dele.
+- **Cobrança em lote:** pendências agrupadas por representante, com mensagem pronta no WhatsApp Web e assistente de e-mail em 4 passos. Cada cobrança grava data e hora na planilha.
+- **Atualização a cada 5 segundos** sem perder os filtros, e exportação em Excel, CSV e PDF.
+
+## Decisões técnicas
+
+- **A planilha continua sendo a fonte.** A equipe já trabalhava nela; o painel só lê, resume e escreve de volta o que ele mesmo produz, que são as datas de cobrança.
+- O Apps Script lê as colunas pelo nome, não pela posição, e descobre sozinho as abas mensais (padrão `AA_Mmm`).
+- Todos os cálculos acontecem no navegador, a partir da lista que o script devolve.
+
+## Stack
+
+Google Apps Script · Google Sheets · JavaScript · SheetJS
 
 ## Estrutura
 
-- `index.html`: estudo de caso do projeto (página principal no GitHub Pages).
-- `assets/`: estilos, script e fotos do estudo de caso.
-- `painel/index.html`: painel em modo portfólio, com dados locais fictícios.
-- `apps-script_6.js`: código original do backend em Google Apps Script, preservado para consulta.
-- `codigo-original/index-original.html`: cópia preservada do painel funcional original.
-- `codigo-original/apps-script_6.js`: cópia preservada do Apps Script original.
+| Caminho | Conteúdo |
+|---|---|
+| `index.html` e `assets/` | Estudo de caso em 9 capítulos |
+| `painel/index.html` | Painel em modo portfólio, com dados fictícios locais |
+| `apps-script_6.js` | Backend em Google Apps Script (7 funções) |
+| `codigo-original/` | Cópias do painel e do Apps Script originais, sem URLs nem dados reais |
 
-## Publicação
+## Rodar localmente
 
-URLs no GitHub Pages:
-
-```text
-https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/          (estudo de caso)
-https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/painel/   (demo do painel)
+```bash
+npx serve .
 ```
 
-Configuração em `Settings > Pages`:
+---
 
-```text
-Source: Deploy from a branch
-Branch: main
-Folder: /root
-```
-
-## Observação
-
-Os códigos originais foram mantidos no repositório, mas a página publicada foi isolada para funcionar apenas com dados fictícios locais no GitHub Pages.
+**🇺🇸 English:** a dashboard that tracks, month by month, which stores have sent their sell-out reports: on time, late, processed or already in the BI. A Google Apps Script web app turns the spreadsheet into a JSON API with no server to maintain; every number on screen is a clickable filter; and pending stores become batched WhatsApp and e-mail follow-ups that are written back to the sheet. Stack: Google Apps Script, Google Sheets, JavaScript, SheetJS. Portfolio version with fictional data; the original runs in production.
