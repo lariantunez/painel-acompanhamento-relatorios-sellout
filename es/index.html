@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <script src="../assets/idioma-estudo.js"></script>
+  <link rel="alternate" hreflang="pt-BR" href="https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/">
+  <link rel="alternate" hreflang="en" href="https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/en/">
+  <link rel="alternate" hreflang="es" href="https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/es/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control de Sell Out · Estudio de caso</title>
+  <meta name="description" content="Estudio de caso: panel que sigue, mes a mes, la recepción de los reportes de sell out de cada tienda, con backend en Google Apps Script sobre una hoja de cálculo de Google y recordatorios de pendientes por WhatsApp y correo electrónico. Demostración con datos ficticios.">
+  <meta property="og:title" content="Control de Sell Out · de la hoja de control al panel de recordatorios">
+  <meta property="og:description" content="Google Apps Script como API, una pestaña por mes, indicadores clicables y recordatorios registrados en la propia hoja.">
+  <meta property="og:image" content="../assets/painel-visao.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/estudo.css">
+  <style>
+    /* Identidade do Controle SellOut: azul índigo do cabeçalho do painel. */
+    :root { --accent: #8c9eff; --accent-2: #8c9eff; --on-accent: #0e1014; --accent-wash: rgba(140, 158, 255, 0.12); }
+    :root[data-theme="light"] { --accent: #3949ab; --accent-2: #3949ab; --on-accent: #fff; --accent-wash: rgba(57, 73, 171, 0.09); }
+    @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --accent: #3949ab; --accent-2: #3949ab; --on-accent: #fff; --accent-wash: rgba(57, 73, 171, 0.09); } }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="wrap">
+      <a class="marca" href="#inicio"><i></i>Control de Sell Out</a>
+      <nav>
+        <a class="opcional" href="https://lariantunez.github.io/Vitrine-de-projetos/?lang=es">Portafolio</a>
+        <a class="opcional" href="#c00">Estudio de caso</a>
+        <a class="opcional" href="https://github.com/lariantunez/painel-acompanhamento-relatorios-sellout">Código</a>
+        <a href="../painel/">Abrir panel</a>
+        <div class="idiomas" role="group" aria-label="Idioma"><a href="../?lang=pt" data-idioma="pt" hreflang="pt-BR">PT</a><a href="../en/" data-idioma="en" hreflang="en">EN</a><a href="./" data-idioma="es" hreflang="es" aria-current="true">ES</a></div>
+        <button class="btn-tema" id="tema" type="button" aria-label="Cambiar tema">☀</button>
+      </nav>
+      <span class="progresso"></span>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="abertura">
+      <div class="wrap">
+        <span class="selo-topo"><b>●</b> Proyecto real · demostración con datos ficticios</span>
+        <h1>De la hoja de control al panel de <em>recordatorios</em>.</h1>
+        <p class="lead">Un panel que sigue, mes a mes, la recepción de los reportes de sell out de cada tienda: lo que llegó a tiempo, lo que está atrasado, lo que ya se procesó y lo que ya está en el BI. Los datos siguen en una hoja de cálculo de Google, servida por un Google Apps Script, y los pendientes se convierten en recordatorios por WhatsApp y correo electrónico registrados en la propia hoja.</p>
+        <div class="acoes">
+          <a class="btn primario" href="../painel/">Explorar el panel →</a>
+          <a class="btn" href="#c00">Leer el estudio de caso</a>
+        </div>
+        <div class="numeros">
+          <div><strong>7</strong><span>funciones en Google Apps Script</span></div>
+          <div><strong>9</strong><span>columnas seguidas por tienda</span></div>
+          <div><strong>16</strong><span>cortes clicables en las tarjetas</span></div>
+          <div><strong>5 s</strong><span>entre una actualización y otra</span></div>
+          <div><strong>3</strong><span>formatos de exportación: Excel, CSV y PDF</span></div>
+        </div>
+        <figure class="vitrine">
+          <div class="barra-janela"><i></i><i></i><i></i><span>painel/ · Control de Sell Out (datos ficticios)</span></div>
+          <img src="../assets/painel-visao.jpg" alt="Panel Control de Sell Out: selector de mes, botones de recordatorio, aviso y exportación; tarjetas de total de reportes, recibidos, concluidos, en el BI y reportes con demostradora; barra de progreso y tabla de tiendas" width="1440" height="900">
+        </figure>
+      </div>
+    </section>
+
+    <div class="wrap livro">
+      <aside class="indice" aria-label="Capítulos">
+        <p>Capítulos</p>
+        <ol>
+          <li><a href="#c00"><b>00</b>El desafío</a></li>
+          <li><a href="#c01"><b>01</b>Decisiones</a></li>
+          <li><a href="#c02"><b>02</b>La hoja</a></li>
+          <li><a href="#c03"><b>03</b>Flujo</a></li>
+          <li><a href="#c04"><b>04</b>Apps Script</a></li>
+          <li><a href="#c05"><b>05</b>Indicadores</a></li>
+          <li><a href="#c06"><b>06</b>Front-end</a></li>
+          <li><a href="#c07"><b>07</b>Recordatorios</a></li>
+          <li><a href="#c08"><b>08</b>Producción y demo</a></li>
+        </ol>
+      </aside>
+
+      <div class="capitulos">
+        <!-- 00 -->
+        <section class="capitulo" id="c00">
+          <span class="rotulo-cap">00 · El desafío</span>
+          <h2>Cada mes, una lista de tiendas y una pregunta: ¿quién ya lo envió?</h2>
+          <p>Los reportes de ventas (sell out) de cada tienda llegan a través de los <strong>representantes</strong>. Con ellos el equipo procesa los datos, publica el resultado en el BI y calcula los premios de las demostradoras. El control está en una <strong>hoja de cálculo de Google</strong>, con una fila por tienda y una pestaña por mes. El panel nació para responder rápido a las preguntas del cierre y convertir los pendientes en recordatorios.</p>
+          <p class="destaque revelar">¿Cuántos reportes llegaron, cuántos están fuera de plazo, quién todavía no los envió y cuánto ya está en el BI? Y, para los que faltan, enviar el recordatorio sin redactar mensaje por mensaje.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao azul"><span class="num">RECEPCIÓN</span><h4>A tiempo, fuera de plazo o sin ventas</h4><p>El estado de cada tienda en el mes, con lo que todavía está en espera separado del resto.</p></div>
+            <div class="cartao verde"><span class="num">PROCESAMIENTO</span><h4>Del reporte al BI</h4><p>Estado del procesamiento (concluido, pausado, no iniciado) y disponibilidad en el Dashboard Totvs.</p></div>
+            <div class="cartao ambar"><span class="num">RECORDATORIO</span><h4>Un mensaje por representante</h4><p>Las tiendas pendientes agrupadas por representante, con el recordatorio registrado en la hoja.</p></div>
+          </div>
+        </section>
+
+        <!-- 01 -->
+        <section class="capitulo" id="c01">
+          <span class="rotulo-cap">01 · Decisiones</span>
+          <h2>La hoja sigue siendo la fuente. El panel solo la vuelve legible.</h2>
+          <p>El equipo ya trabajaba en la hoja, y siguió siendo el lugar donde se actualiza el estado. El panel lee, resume y devuelve a la hoja solo lo que él mismo produce: la fecha de los recordatorios.</p>
+          <div class="grade g2 revelar">
+            <div class="cartao"><span class="num">01</span><h4>Sin base de datos nueva</h4><p>Un Google Apps Script publicado como aplicación web convierte la hoja en una API que responde JSON. No hay servidor que mantener.</p></div>
+            <div class="cartao"><span class="num">02</span><h4>Una pestaña por mes</h4><p>Cada mes es una pestaña con nombre en el patrón <code>AA_Mmm</code> (por ejemplo, <code>26_Mar</code>). El panel descubre las pestañas solo y abre en el mes más reciente.</p></div>
+            <div class="cartao"><span class="num">03</span><h4>Todo número filtra la pantalla</h4><p>Cada tarjeta y cada línea de detalle es un filtro: un clic lo activa, otro clic lo desactiva, y la tabla muestra exactamente las tiendas de ese número.</p></div>
+            <div class="cartao"><span class="num">04</span><h4>El recordatorio deja rastro</h4><p>Cada recordatorio enviado graba fecha y hora en la fila de cada tienda del representante, por canal: WhatsApp o correo electrónico.</p></div>
+          </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="capitulo" id="c02">
+          <span class="rotulo-cap">02 · La hoja</span>
+          <h2>Pestañas mensuales, una pestaña de contactos y nueve columnas.</h2>
+          <p>El encabezado está en la fila 1 y el Apps Script lee las columnas <strong>por nombre</strong>, no por posición. Los contactos de los representantes están en una pestaña aparte, <code>Representantes</code>, vinculada a las pestañas mensuales por el nombre del representante.</p>
+          <figure class="diagrama revelar">
+            <svg viewBox="0 0 960 300" role="img" aria-label="Estructura: pestañas mensuales a la izquierda, Apps Script al centro, pestaña Representantes y columnas de recordatorio a la derecha">
+              <path class="liga forte" d="M290 130 C 320 130, 320 140, 350 140"/>
+              <path class="liga" d="M610 125 C 640 125, 640 79, 670 79"/>
+              <path class="liga" d="M610 155 C 640 155, 640 219, 670 219"/>
+              <g class="no fato"><rect x="30" y="40" width="260" height="180" rx="10"/><text x="160" y="70" text-anchor="middle">26_Jan · 26_Fev · 26_Mar</text><text class="sub" x="160" y="94" text-anchor="middle">una pestaña por mes · una fila por tienda</text><text class="sub" x="160" y="122" text-anchor="middle">Razão Social · Nome Fantasia</text><text class="sub" x="160" y="140" text-anchor="middle">Representante · Fluxo Agenda</text><text class="sub" x="160" y="158" text-anchor="middle">Recebido · Situacao</text><text class="sub" x="160" y="176" text-anchor="middle">Dashboard Totvs</text><text class="sub" x="160" y="200" text-anchor="middle">+ columnas de recordatorio</text></g>
+              <g class="no"><rect x="350" y="100" width="260" height="80" rx="10"/><text x="480" y="132" text-anchor="middle">Apps Script · doGet</text><text class="sub" x="480" y="154" text-anchor="middle">lee por nombre de columna, responde JSON</text></g>
+              <g class="no dim"><rect x="670" y="40" width="260" height="78" rx="10"/><text x="800" y="70" text-anchor="middle">Representantes</text><text class="sub" x="800" y="92" text-anchor="middle">A nombre · B teléfono · C correo</text></g>
+              <g class="no apoio"><rect x="670" y="180" width="260" height="78" rx="10"/><text x="800" y="210" text-anchor="middle">Ultima Cobrança (Email)</text><text class="sub" x="800" y="232" text-anchor="middle">grabadas por el panel, creadas si faltan</text></g>
+            </svg>
+            <figcaption>Rojo: pestañas mensuales con el estado de cada tienda. Verde: contactos de los representantes. Punteado: columnas escritas por el propio panel.</figcaption>
+          </figure>
+          <div class="tabela-rolagem revelar">
+            <table class="tabela">
+              <thead><tr><th>Columna</th><th>En el panel</th><th>Valores esperados</th><th>Uso</th></tr></thead>
+              <tbody>
+                <tr><td><code>Razão Social</code> · <code>Nome Fantasia</code></td><td>Razão Social · Nome Fantasia</td><td>texto</td><td>Identifican la tienda (razón social y nombre comercial); el nombre comercial va en el mensaje de recordatorio</td></tr>
+                <tr><td><code>Representante</code></td><td>Representante</td><td>nombre</td><td>Agrupa los pendientes y los vincula a la pestaña de contactos</td></tr>
+                <tr><td><code>Fluxo Agenda</code></td><td>Demonstradora</td><td>nombre o vacío</td><td>Separa los reportes de tiendas con demostradora</td></tr>
+                <tr><td><code>Recebido</code></td><td>Recebido</td><td><span class="ok">Sim</span> · <span class="alerta">Fora do Prazo</span> · Sem Vendas · Não</td><td>Estado del reporte en el mes (sí, fuera de plazo, sin ventas, no)</td></tr>
+                <tr><td><code>Situacao</code></td><td>Situação</td><td>Concluído · Pausado · Não Iniciado</td><td>Avance del procesamiento (concluido, pausado, no iniciado)</td></tr>
+                <tr><td><code>Dashboard Totvs</code></td><td>Dash Totvs</td><td>Disponível · Em Andamento · Indisponível</td><td>Si el dato de la tienda ya está en el BI (disponible, en curso, no disponible)</td></tr>
+                <tr><td><code>Ultima Cobrança</code> · <code>Ultima Cobrança Email</code></td><td>Cob. WhatsApp · Cob. Email</td><td>dd/MM/aaaa HH:mm</td><td>Grabadas por el Apps Script en cada recordatorio</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="capitulo" id="c03">
+          <span class="rotulo-cap">03 · Flujo</span>
+          <h2>De la hoja a la pantalla, y de vuelta a la hoja.</h2>
+          <div class="fluxo revelar" role="img" aria-label="Flujo: hoja de cálculo de Google, Apps Script, panel en el navegador y acciones de recordatorio que graban de vuelta en la hoja">
+            <div class="coluna"><b>1 · Hoja de Google</b>
+              <div class="item fato">Pestañas mensuales<small>una fila por tienda</small></div>
+              <div class="item dim">Representantes<small>teléfono y correo</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>2 · Apps Script</b>
+              <div class="item">Lista de pestañas<small>patrón AA_Mmm</small></div>
+              <div class="item">Filas de la pestaña<small>objetos con fechas formateadas</small></div>
+              <div class="item">Contactos<small>teléfonos y correos</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>3 · Panel</b>
+              <div class="item erp">Tarjetas y progreso<small>calculados en el navegador</small></div>
+              <div class="item erp">Filtros y tabla<small>búsqueda, selección múltiple, ordenamiento</small></div>
+              <div class="item">Actualización cada 5 s<small>sin perder los filtros</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>4 · Acciones</b>
+              <div class="item adv">WhatsApp Web<small>mensaje listo por representante</small></div>
+              <div class="item adv">Aviso por correo<small>asistente en 4 pasos</small></div>
+              <div class="item">Registro en la hoja<small>fecha y hora del recordatorio</small></div>
+            </div>
+          </div>
+          <p>La lectura es siempre de la pestaña entera: el Apps Script devuelve las filas como objetos (encabezado → valor), descarta las filas vacías y ya formatea las fechas. Todos los cálculos ocurren en el navegador, a partir de esa lista.</p>
+        </section>
+
+        <!-- 04 -->
+        <section class="capitulo" id="c04">
+          <span class="rotulo-cap">04 · Apps Script</span>
+          <h2>Una URL, seis acciones, siete funciones.</h2>
+          <p>El backend es un único archivo de Google Apps Script publicado como aplicación web. La función <code>doGet</code> recibe el parámetro <code>action</code> y responde siempre en JSON; los errores también vuelven como JSON, con el mensaje.</p>
+          <div class="tabela-rolagem revelar">
+            <table class="tabela">
+              <thead><tr><th>Acción</th><th>Función</th><th>Qué hace</th></tr></thead>
+              <tbody>
+                <tr><td><code>sheets</code></td><td><code>getSheets</code></td><td>Lista las pestañas cuyo nombre sigue <code>/^\d{2}_[A-Za-z]{3}$/</code>: solo los meses, nunca pestañas auxiliares</td></tr>
+                <tr><td><em>(por defecto)</em> <code>sheet=26_Mar</code></td><td><code>getRows</code></td><td>Devuelve las filas de la pestaña como objetos, con fechas en dd/MM/aaaa y sin filas vacías</td></tr>
+                <tr><td><code>telefones</code></td><td><code>getTelefones</code></td><td>Mapa nombre → teléfono, a partir de las columnas A y B de <code>Representantes</code></td></tr>
+                <tr><td><code>emailsRepresentantes</code></td><td><code>getEmailsRepresentantes</code></td><td>Nombres y correos de la columna C, solo los que contienen <code>@</code></td></tr>
+                <tr><td><code>registrarCobranca</code></td><td><code>registrarCobranca</code></td><td>Graba fecha y hora en <code>Ultima Cobrança</code> (WhatsApp)</td></tr>
+                <tr><td><code>registrarCobrancaEmail</code></td><td><code>registrarCobranca</code></td><td>Graba fecha y hora en <code>Ultima Cobrança Email</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>El registro de un recordatorio sigue siempre la misma secuencia:</p>
+          <div class="etapas revelar">
+            <div class="etapa"><div><h4>Valida los parámetros</h4><p>pestaña y representante son obligatorios; sin ellos, la respuesta es <code>ok: false</code> con el motivo</p></div></div>
+            <div class="etapa"><div><h4>Encuentra la columna del canal por nombre</h4><p>si la columna todavía no existe, se crea al final del encabezado</p></div></div>
+            <div class="etapa"><div><h4>Busca todas las filas del representante</h4><p>comparación sin distinguir mayúsculas de minúsculas</p></div></div>
+            <div class="etapa"><div><h4>Graba fecha y hora en cada fila</h4><p>en la zona horaria del proyecto, formato dd/MM/aaaa HH:mm</p></div></div>
+            <div class="etapa"><div><h4>Fuerza la grabación y responde</h4><p><code>SpreadsheetApp.flush()</code> y respuesta con cuántas filas se grabaron</p></div></div>
+          </div>
+          <div class="grade g2 revelar">
+            <div class="cartao"><h4>Columna nueva sin romper nada</h4><p>El recordatorio por correo llegó después del de WhatsApp. Como la columna se localiza por nombre y se crea si falta, las pestañas antiguas siguen funcionando sin ajuste manual.</p></div>
+            <div class="cartao"><h4>Implementación sin cambiar la URL</h4><p>Cada cambio se convierte en una nueva versión de la misma implementación, y la URL que usa el panel sigue siendo la misma.</p></div>
+          </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="capitulo" id="c05">
+          <span class="rotulo-cap">05 · Indicadores</span>
+          <h2>Cinco tarjetas, cada línea un filtro.</h2>
+          <p>Los indicadores se calculan en el navegador a partir de las filas del mes. Las reglas están explícitas en el código, y algunas fueron decisiones de negocio:</p>
+          <div class="grade g2 revelar">
+            <div class="cartao azul"><span class="num">RECIBIDOS</span><h4>Sim + Fora do Prazo</h4><p>Recibido es lo que llegó, a tiempo o no. <strong>Sem Vendas</strong> (sin ventas) queda fuera de ese total y aparece en una línea propia en la tarjeta de total.</p></div>
+            <div class="cartao vermelho"><span class="num">EN ESPERA</span><h4>Total − recibidos − sin ventas</h4><p>Las tiendas que todavía no enviaron nada. Son ellas las que entran en el recordatorio, marcadas como <code>Não</code> en la columna Recebido.</p></div>
+            <div class="cartao verde"><span class="num">PROCESAMIENTO</span><h4>Concluidos, pausados y pendientes</h4><p>Pendiente de procesamiento es el reporte que ya llegó (Sim o Fora do Prazo) y todavía está como Não Iniciado (no iniciado).</p></div>
+            <div class="cartao violeta"><span class="num">BI</span><h4>Disponible, en curso, no disponible</h4><p>Cuánto del mes ya está en el Dashboard Totvs, con la grafía con y sin tilde de “Indisponível” tratada como la misma.</p></div>
+          </div>
+          <p>La quinta tarjeta separa los <strong>reportes con demostradora</strong> (columna <code>Fluxo Agenda</code>): llegados, pendientes, concluidos, pausados y el porcentaje recibido. Debajo de las tarjetas, una barra de progreso apila concluidos, pausados y en espera, y dos recuadros muestran la fecha del último aviso por correo y del último recordatorio por WhatsApp, leídas de la propia hoja.</p>
+          <p class="destaque revelar">Dieciséis cortes distintos caben en cinco tarjetas, y cualquiera de ellos se convierte, con un clic, en la lista exacta de tiendas detrás del número.</p>
+        </section>
+
+        <!-- 06 -->
+        <section class="capitulo" id="c06">
+          <span class="rotulo-cap">06 · Front-end</span>
+          <h2>Una página, filtros que se suman.</h2>
+          <p>La interfaz es un único archivo HTML con CSS y JavaScript puro, sin framework. El filtro de las tarjetas se suma a los filtros de columna, y todo lo que está activo aparece como píldora en la parte superior, con eliminación individual o “Limpar todos” (limpiar todos).</p>
+          <div class="grade g3 revelar">
+            <div class="cartao azul"><h4>Búsqueda general</h4><p>Busca el texto en todas las columnas de la fila al mismo tiempo.</p></div>
+            <div class="cartao azul"><h4>Siete filtros de columna</h4><p>Selección múltiple con búsqueda interna, “Selecionar todos” (seleccionar todos) y “Limpar” (limpiar) en cada lista.</p></div>
+            <div class="cartao azul"><h4>Clic en la celda</h4><p>Hacer clic en el nombre de un representante, tienda o demostradora en la tabla activa el filtro de ese valor.</p></div>
+            <div class="cartao verde"><h4>Ordenamiento y páginas</h4><p>Cualquier columna ordena según el orden alfabético del portugués; la tabla pagina de 50 en 50.</p></div>
+            <div class="cartao verde"><h4>Actualización silenciosa</h4><p>Cada 5 segundos la pestaña se vuelve a leer sin borrar filtros ni ordenamiento ni cambiar de mes, con la hora de la última actualización en la parte superior.</p></div>
+            <div class="cartao ambar"><h4>Exportación</h4><p>Excel (SheetJS), CSV con BOM y separador punto y coma, o PDF mediante la impresión del navegador; con filtros o la pestaña entera.</p></div>
+          </div>
+          <div class="galeria revelar">
+            <figure><img src="../assets/painel-filtros.jpg" alt="Panel con la tarjeta Aguardando (en espera) y un representante seleccionados, píldoras de filtros activos en la parte superior" loading="lazy" width="1440" height="900"><figcaption>Filtro de la tarjeta + filtro de columna, con las píldoras activas arriba.</figcaption></figure>
+            <figure><img src="../assets/painel-tabela.jpg" alt="Tabla de tiendas con razón social, nombre comercial, representante, demostradora, recibido, situación, dashboard y fechas de recordatorio" loading="lazy" width="1440" height="900"><figcaption>Tabla: nueve columnas, estados en etiquetas de colores.</figcaption></figure>
+            <figure><img src="../assets/painel-cobranca.jpg" alt="Ventana de recordatorios por WhatsApp con la plantilla del mensaje y las tiendas pendientes agrupadas por representante" loading="lazy" width="1440" height="900"><figcaption>Recordatorio: pendientes agrupados por representante.</figcaption></figure>
+            <figure><img src="../assets/painel-exportar.jpg" alt="Ventana de exportación con elección de formato (Excel, CSV o PDF) y de alcance (con filtros o todos)" loading="lazy" width="1440" height="900"><figcaption>Exportar: formato y alcance de los datos.</figcaption></figure>
+          </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="capitulo" id="c07">
+          <span class="rotulo-cap">07 · Recordatorios</span>
+          <h2>Un mensaje por representante, no por tienda.</h2>
+          <p>El botón “Cobrar Relatórios Pendentes” (reclamar reportes pendientes) muestra cuántas tiendas faltan en el mes. Al abrirlo, el panel agrupa las tiendas en espera por representante, busca los teléfonos en la pestaña <code>Representantes</code> y arma un mensaje con el primer nombre y la lista de las tiendas.</p>
+          <div class="etapas revelar">
+            <div class="etapa"><div><h4>Revisión de la lista</h4><p>plantilla del mensaje, total de representantes y tiendas, y aviso de quién no tiene teléfono (se omitirá)</p></div></div>
+            <div class="etapa"><div><h4>Envío guiado</h4><p>“Enviar agora” (enviar ahora) abre WhatsApp Web con el número (con 55 adelante) y el texto listos</p></div></div>
+            <div class="etapa"><div><h4>Registro y siguiente</h4><p>“Próximo” (siguiente) graba el recordatorio en la hoja y pasa al representante siguiente, con barra de progreso</p></div></div>
+            <div class="etapa"><div><h4>Conclusión</h4><p>el último envío graba y cierra la tanda con el total de representantes notificados</p></div></div>
+          </div>
+          <p>El aviso general a los representantes es por correo electrónico, en un <strong>asistente de 4 pasos</strong> que prepara todo para pegar en el webmail: destinatarios, asunto, cuerpo y envío. Al concluir, el recordatorio por correo se registra en la hoja para cada representante.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao"><span class="num">PLAZO</span><h4>Texto que sigue el calendario</h4><p>El plazo es el día 10. El cuerpo del correo cambia si el plazo es hoy, mañana, ya pasó o todavía está por venir, y el asunto incluye el mes de referencia (el mes anterior).</p></div>
+            <div class="cartao"><span class="num">COPIA</span><h4>Formato preservado</h4><p>El cuerpo se copia como HTML y texto al mismo tiempo (<code>ClipboardItem</code>), con dos alternativas por si el navegador no lo permite.</p></div>
+            <div class="cartao"><span class="num">TIEMPO</span><h4>Límite de espera</h4><p>La búsqueda de los correos tiene un límite de 10 segundos (<code>AbortController</code>), con un mensaje claro si el Apps Script no responde.</p></div>
+          </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="capitulo" id="c08">
+          <span class="rotulo-cap">08 · Producción y demostración</span>
+          <h2>En la hoja del equipo; aquí, en el navegador.</h2>
+          <div class="arquitetura revelar">
+            <div class="caixa"><span class="tag">Navegador</span><b>Front-end</b><ul><li>HTML, CSS y JS puro</li><li>exporta Excel, CSV y PDF</li></ul></div>
+            <div class="seta">⇄</div>
+            <div class="caixa"><span class="tag">Google Apps Script</span><b>Aplicación web</b><ul><li><code>doGet</code> con 6 acciones</li><li>respuestas en JSON</li><li>graba los recordatorios</li></ul></div>
+            <div class="seta">⇄</div>
+            <div class="caixa"><span class="tag">Hojas de cálculo de Google</span><b>Datos</b><ul><li>una pestaña por mes</li><li>pestaña Representantes</li></ul></div>
+          </div>
+          <p>En esta demostración no hay hoja ni Apps Script. El panel funciona en <strong>modo portafolio</strong>: tres meses de tiendas, representantes y demostradoras ficticios se generan en el propio navegador, y la actualización automática queda desactivada. Tarjetas, filtros, tabla, ordenamiento, exportación y el armado del recordatorio funcionan normalmente; las etapas que dependen del Apps Script (teléfonos, correos y registro de los recordatorios) no tienen de dónde obtener datos. El backend original está en el repositorio, en <code>apps-script_6.js</code>.</p>
+          <h3>Tecnologías</h3>
+          <div class="pilulas">
+            <span>Google Apps Script</span><span>Hojas de cálculo de Google</span><span>JavaScript sin framework</span><span>HTML y CSS</span><span>SheetJS (XLSX)</span><span>Clipboard API</span><span>WhatsApp Web</span><span>GitHub Pages</span>
+          </div>
+          <div class="encerramento revelar">
+            <span class="rotulo-cap">Pruébalo</span>
+            <h2>Haz clic en “Aguardando” y mira quién falta.</h2>
+            <p class="texto">Recorrido sugerido: en la tarjeta Total, haz clic en Aguardando (en espera); después haz clic en el nombre de un representante en la tabla. Abre “Cobrar Relatórios Pendentes” para ver las tiendas agrupadas y termina exportando el corte a Excel.</p>
+            <div class="acoes"><a class="btn primario" href="../painel/">Abrir el panel →</a><a class="btn" href="https://github.com/lariantunez/painel-acompanhamento-relatorios-sellout">Ver el código</a></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><strong>Larissa Antunez</strong> · Analytics &amp; Desarrollo</span>
+      <span>Proyecto real · demostración con datos ficticios</span>
+    </div>
+  </footer>
+  <script src="../assets/estudo.js"></script>
+</body>
+</html>

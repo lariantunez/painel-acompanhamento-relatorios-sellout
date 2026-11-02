@@ -239,3 +239,14 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: 
   .mudanca { grid-template-columns: minmax(0, 1fr); }
   .mudanca .seta { transform: rotate(90deg); height: 20px; }
 }
+
+/* Seletor de idioma (PT, EN, ES), na mesma altura do botão de tema. */
+.idiomas { display: flex; height: 36px; padding: 3px; gap: 2px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+.topo nav .idiomas a { display: grid; place-items: center; font: 500 12px/1 var(--mono); padding: 0 9px; border-radius: 999px; color: var(--muted); }
+.topo nav .idiomas a:hover { background: transparent; color: var(--text); }
+.topo nav .idiomas a[aria-current="true"] { background: var(--accent-2); color: var(--on-accent, #fff); }
+/* Celular: o topo não cabe com nome, seletor e botões; o nome sai (o título da página já o mostra) e fica o ícone. */
+@media (max-width: 480px) {
+  .topo .marca { font-size: 0; gap: 0; }
+  .topo nav .idiomas a { padding: 0 7px; }
+}

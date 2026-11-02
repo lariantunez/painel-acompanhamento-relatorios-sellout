@@ -5,7 +5,13 @@
   try { const tema = localStorage.getItem("dc-tema"); if (tema) raiz.dataset.theme = tema; } catch { /* sem armazenamento */ }
   const botao = document.getElementById("tema");
   const escuroAgora = () => (raiz.dataset.theme ? raiz.dataset.theme === "dark" : !matchMedia("(prefers-color-scheme: light)").matches);
-  const icone = () => { botao.textContent = escuroAgora() ? "☀" : "☾"; botao.title = escuroAgora() ? "Tema claro" : "Tema escuro"; };
+  // Dica do botão no idioma da página (a Vitrine troca o idioma sem recarregar, por isso é lido a cada vez).
+  const DICAS = { pt: ["Tema claro", "Tema escuro"], en: ["Light theme", "Dark theme"], es: ["Tema claro", "Tema oscuro"] };
+  const icone = () => {
+    const [claro, escuro] = DICAS[raiz.lang.slice(0, 2)] || DICAS.pt;
+    botao.textContent = escuroAgora() ? "☀" : "☾";
+    botao.title = escuroAgora() ? claro : escuro;
+  };
   icone();
   botao.addEventListener("click", () => {
     raiz.dataset.theme = escuroAgora() ? "light" : "dark";

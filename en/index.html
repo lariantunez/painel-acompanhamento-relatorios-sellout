@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="../assets/idioma-estudo.js"></script>
+  <link rel="alternate" hreflang="pt-BR" href="https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/">
+  <link rel="alternate" hreflang="en" href="https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/en/">
+  <link rel="alternate" hreflang="es" href="https://lariantunez.github.io/painel-acompanhamento-relatorios-sellout/es/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sell-Out Tracker · Case study</title>
+  <meta name="description" content="Case study: a dashboard that tracks, month by month, which stores have sent their sell-out reports, with a Google Apps Script backend on top of a Google Sheet and follow-ups on pending reports via WhatsApp and email. Demo with fictional data.">
+  <meta property="og:title" content="Sell-Out Tracker · from a tracking spreadsheet to a follow-up dashboard">
+  <meta property="og:description" content="Google Apps Script as an API, one sheet tab per month, clickable indicators and follow-ups logged in the spreadsheet itself.">
+  <meta property="og:image" content="../assets/painel-visao.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/estudo.css">
+  <style>
+    /* Identidade do Controle SellOut: azul índigo do cabeçalho do painel. */
+    :root { --accent: #8c9eff; --accent-2: #8c9eff; --on-accent: #0e1014; --accent-wash: rgba(140, 158, 255, 0.12); }
+    :root[data-theme="light"] { --accent: #3949ab; --accent-2: #3949ab; --on-accent: #fff; --accent-wash: rgba(57, 73, 171, 0.09); }
+    @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --accent: #3949ab; --accent-2: #3949ab; --on-accent: #fff; --accent-wash: rgba(57, 73, 171, 0.09); } }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="wrap">
+      <a class="marca" href="#inicio"><i></i>Sell-Out Tracker</a>
+      <nav>
+        <a class="opcional" href="https://lariantunez.github.io/Vitrine-de-projetos/?lang=en">Portfolio</a>
+        <a class="opcional" href="#c00">Case study</a>
+        <a class="opcional" href="https://github.com/lariantunez/painel-acompanhamento-relatorios-sellout">Code</a>
+        <a href="../painel/">Open dashboard</a>
+        <div class="idiomas" role="group" aria-label="Language"><a href="../?lang=pt" data-idioma="pt" hreflang="pt-BR">PT</a><a href="./" data-idioma="en" hreflang="en" aria-current="true">EN</a><a href="../es/" data-idioma="es" hreflang="es">ES</a></div>
+        <button class="btn-tema" id="tema" type="button" aria-label="Toggle theme">☀</button>
+      </nav>
+      <span class="progresso"></span>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="abertura">
+      <div class="wrap">
+        <span class="selo-topo"><b>●</b> Real project · demo with fictional data</span>
+        <h1>From a tracking spreadsheet to a <em>follow-up</em> dashboard.</h1>
+        <p class="lead">A dashboard that tracks, month by month, which stores have sent their sell-out reports: what arrived on time, what is late, what has already been processed and what is already in the BI. The data stays in a Google Sheet, served by Google Apps Script, and pending reports turn into WhatsApp and email follow-ups that are logged in the spreadsheet itself.</p>
+        <div class="acoes">
+          <a class="btn primario" href="../painel/">Explore the dashboard →</a>
+          <a class="btn" href="#c00">Read the case study</a>
+        </div>
+        <div class="numeros">
+          <div><strong>7</strong><span>functions in Google Apps Script</span></div>
+          <div><strong>9</strong><span>columns tracked per store</span></div>
+          <div><strong>16</strong><span>clickable breakdowns on the cards</span></div>
+          <div><strong>5 s</strong><span>between refreshes</span></div>
+          <div><strong>3</strong><span>export formats: Excel, CSV and PDF</span></div>
+        </div>
+        <figure class="vitrine">
+          <div class="barra-janela"><i></i><i></i><i></i><span>painel/ · Sell-Out Tracker (fictional data)</span></div>
+          <img src="../assets/painel-visao.jpg" alt="Sell-Out Tracker dashboard: month selector, follow-up, notice and export buttons; cards for total reports, received, completed, in the BI and reports with a product demonstrator; progress bar and store table" width="1440" height="900">
+        </figure>
+      </div>
+    </section>
+
+    <div class="wrap livro">
+      <aside class="indice" aria-label="Chapters">
+        <p>Chapters</p>
+        <ol>
+          <li><a href="#c00"><b>00</b>The challenge</a></li>
+          <li><a href="#c01"><b>01</b>Decisions</a></li>
+          <li><a href="#c02"><b>02</b>The spreadsheet</a></li>
+          <li><a href="#c03"><b>03</b>Flow</a></li>
+          <li><a href="#c04"><b>04</b>Apps Script</a></li>
+          <li><a href="#c05"><b>05</b>Indicators</a></li>
+          <li><a href="#c06"><b>06</b>Front end</a></li>
+          <li><a href="#c07"><b>07</b>Follow-up</a></li>
+          <li><a href="#c08"><b>08</b>Production and demo</a></li>
+        </ol>
+      </aside>
+
+      <div class="capitulos">
+        <!-- 00 -->
+        <section class="capitulo" id="c00">
+          <span class="rotulo-cap">00 · The challenge</span>
+          <h2>Every month, a list of stores and one question: who has sent theirs?</h2>
+          <p>Each store's sales reports (sell-out) come in through the <strong>sales reps</strong>. The team uses them to process the data, publish the results in the BI and calculate the bonuses for product demonstrators. Tracking lives in a <strong>Google Sheet</strong>, with one row per store and one tab per month. The dashboard was built to answer the month-end closing questions quickly and turn pending reports into follow-ups.</p>
+          <p class="destaque revelar">How many reports have arrived, how many are late, who hasn't sent theirs yet and how much is already in the BI? And for the missing ones, follow up without writing each message by hand.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao azul"><span class="num">RECEIPT</span><h4>On time, late or no sales</h4><p>Each store's status for the month, with what is still pending kept apart from the rest.</p></div>
+            <div class="cartao verde"><span class="num">PROCESSING</span><h4>From report to BI</h4><p>Processing status (completed, paused, not started) and availability in the Totvs Dashboard.</p></div>
+            <div class="cartao ambar"><span class="num">FOLLOW-UP</span><h4>One message per sales rep</h4><p>Pending stores grouped by sales rep, with the follow-up logged in the spreadsheet.</p></div>
+          </div>
+        </section>
+
+        <!-- 01 -->
+        <section class="capitulo" id="c01">
+          <span class="rotulo-cap">01 · Decisions</span>
+          <h2>The spreadsheet remains the source. The dashboard just makes it readable.</h2>
+          <p>The team already worked in the spreadsheet, and it remained the place where status gets updated. The dashboard reads, summarizes and writes back to the spreadsheet only what it produces itself: the follow-up dates.</p>
+          <div class="grade g2 revelar">
+            <div class="cartao"><span class="num">01</span><h4>No new database</h4><p>A Google Apps Script deployed as a web app turns the spreadsheet into an API that returns JSON. There is no server to maintain.</p></div>
+            <div class="cartao"><span class="num">02</span><h4>One tab per month</h4><p>Each month is a tab named with the <code>AA_Mmm</code> pattern (for example, <code>26_Mar</code>). The dashboard discovers the tabs on its own and opens on the most recent month.</p></div>
+            <div class="cartao"><span class="num">03</span><h4>Every number filters the screen</h4><p>Each card and each detail line is a filter: one click turns it on, another turns it off, and the table shows exactly the stores behind that number.</p></div>
+            <div class="cartao"><span class="num">04</span><h4>Follow-ups leave a trail</h4><p>Every follow-up sent records the date and time on the row of each of the sales rep's stores, per channel: WhatsApp or email.</p></div>
+          </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="capitulo" id="c02">
+          <span class="rotulo-cap">02 · The spreadsheet</span>
+          <h2>Monthly tabs, a contacts tab and nine columns.</h2>
+          <p>The header is on row 1, and the Apps Script reads columns <strong>by name</strong>, not by position. Sales rep contacts live in a separate tab, <code>Representantes</code>, linked to the monthly tabs by the sales rep's name.</p>
+          <figure class="diagrama revelar">
+            <svg viewBox="0 0 960 300" role="img" aria-label="Structure: monthly tabs on the left, Apps Script in the center, the Representantes tab and follow-up columns on the right">
+              <path class="liga forte" d="M290 130 C 320 130, 320 140, 350 140"/>
+              <path class="liga" d="M610 125 C 640 125, 640 79, 670 79"/>
+              <path class="liga" d="M610 155 C 640 155, 640 219, 670 219"/>
+              <g class="no fato"><rect x="30" y="40" width="260" height="180" rx="10"/><text x="160" y="70" text-anchor="middle">26_Jan · 26_Fev · 26_Mar</text><text class="sub" x="160" y="94" text-anchor="middle">one tab per month · one row per store</text><text class="sub" x="160" y="122" text-anchor="middle">Razão Social · Nome Fantasia</text><text class="sub" x="160" y="140" text-anchor="middle">Representante · Fluxo Agenda</text><text class="sub" x="160" y="158" text-anchor="middle">Recebido · Situacao</text><text class="sub" x="160" y="176" text-anchor="middle">Dashboard Totvs</text><text class="sub" x="160" y="200" text-anchor="middle">+ follow-up columns</text></g>
+              <g class="no"><rect x="350" y="100" width="260" height="80" rx="10"/><text x="480" y="132" text-anchor="middle">Apps Script · doGet</text><text class="sub" x="480" y="154" text-anchor="middle">reads by column name, returns JSON</text></g>
+              <g class="no dim"><rect x="670" y="40" width="260" height="78" rx="10"/><text x="800" y="70" text-anchor="middle">Representantes</text><text class="sub" x="800" y="92" text-anchor="middle">A name · B phone · C email</text></g>
+              <g class="no apoio"><rect x="670" y="180" width="260" height="78" rx="10"/><text x="800" y="210" text-anchor="middle">Ultima Cobrança (Email)</text><text class="sub" x="800" y="232" text-anchor="middle">written by the dashboard, created if missing</text></g>
+            </svg>
+            <figcaption>Red: monthly tabs with each store's status. Green: sales rep contacts. Dashed: columns written by the dashboard itself.</figcaption>
+          </figure>
+          <div class="tabela-rolagem revelar">
+            <table class="tabela">
+              <thead><tr><th>Column</th><th>In the dashboard</th><th>Expected values</th><th>Use</th></tr></thead>
+              <tbody>
+                <tr><td><code>Razão Social</code> · <code>Nome Fantasia</code></td><td>Razão Social · Nome Fantasia</td><td>text</td><td>Identify the store (legal name and trade name); the trade name goes into the follow-up message</td></tr>
+                <tr><td><code>Representante</code></td><td>Representante</td><td>name</td><td>Groups pending reports and links to the contacts tab</td></tr>
+                <tr><td><code>Fluxo Agenda</code></td><td>Demonstradora</td><td>name or empty</td><td>Separates reports from stores with a product demonstrator</td></tr>
+                <tr><td><code>Recebido</code></td><td>Recebido</td><td><span class="ok">Sim</span> · <span class="alerta">Fora do Prazo</span> · Sem Vendas · Não</td><td>Report status for the month (yes, late, no sales, no)</td></tr>
+                <tr><td><code>Situacao</code></td><td>Situação</td><td>Concluído · Pausado · Não Iniciado</td><td>Processing progress (completed, paused, not started)</td></tr>
+                <tr><td><code>Dashboard Totvs</code></td><td>Dash Totvs</td><td>Disponível · Em Andamento · Indisponível</td><td>Whether the store's data is already in the BI (available, in progress, unavailable)</td></tr>
+                <tr><td><code>Ultima Cobrança</code> · <code>Ultima Cobrança Email</code></td><td>Cob. WhatsApp · Cob. Email</td><td>dd/MM/yyyy HH:mm</td><td>Written by the Apps Script on every follow-up</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="capitulo" id="c03">
+          <span class="rotulo-cap">03 · Flow</span>
+          <h2>From the spreadsheet to the screen, and back to the spreadsheet.</h2>
+          <div class="fluxo revelar" role="img" aria-label="Flow: Google Sheet, Apps Script, dashboard in the browser and follow-up actions that write back to the spreadsheet">
+            <div class="coluna"><b>1 · Google Sheet</b>
+              <div class="item fato">Monthly tabs<small>one row per store</small></div>
+              <div class="item dim">Representantes<small>phone and email</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>2 · Apps Script</b>
+              <div class="item">Tab list<small>AA_Mmm pattern</small></div>
+              <div class="item">Tab rows<small>objects with formatted dates</small></div>
+              <div class="item">Contacts<small>phones and emails</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>3 · Dashboard</b>
+              <div class="item erp">Cards and progress<small>calculated in the browser</small></div>
+              <div class="item erp">Filters and table<small>search, multi-select, sorting</small></div>
+              <div class="item">Refresh every 5 s<small>without losing filters</small></div>
+            </div>
+            <div class="seta">→</div>
+            <div class="coluna"><b>4 · Actions</b>
+              <div class="item adv">WhatsApp Web<small>ready-made message per sales rep</small></div>
+              <div class="item adv">Email notice<small>4-step wizard</small></div>
+              <div class="item">Logged in the spreadsheet<small>follow-up date and time</small></div>
+            </div>
+          </div>
+          <p>It always reads the whole tab: the Apps Script returns rows as objects (header → value), drops empty rows and formats the dates up front. All calculations happen in the browser, starting from that list.</p>
+        </section>
+
+        <!-- 04 -->
+        <section class="capitulo" id="c04">
+          <span class="rotulo-cap">04 · Apps Script</span>
+          <h2>One URL, six actions, seven functions.</h2>
+          <p>The backend is a single Google Apps Script file deployed as a web app. The <code>doGet</code> function takes the <code>action</code> parameter and always responds in JSON; errors also come back as JSON, with the message.</p>
+          <div class="tabela-rolagem revelar">
+            <table class="tabela">
+              <thead><tr><th>Action</th><th>Function</th><th>What it does</th></tr></thead>
+              <tbody>
+                <tr><td><code>sheets</code></td><td><code>getSheets</code></td><td>Lists the tabs whose name matches <code>/^\d{2}_[A-Za-z]{3}$/</code>: only the months, never helper tabs</td></tr>
+                <tr><td><em>(default)</em> <code>sheet=26_Mar</code></td><td><code>getRows</code></td><td>Returns the tab's rows as objects, with dates as dd/MM/yyyy and no empty rows</td></tr>
+                <tr><td><code>telefones</code></td><td><code>getTelefones</code></td><td>Name → phone map, from columns A and B of <code>Representantes</code></td></tr>
+                <tr><td><code>emailsRepresentantes</code></td><td><code>getEmailsRepresentantes</code></td><td>Names and emails from column C, only those containing <code>@</code></td></tr>
+                <tr><td><code>registrarCobranca</code></td><td><code>registrarCobranca</code></td><td>Writes the date and time to <code>Ultima Cobrança</code> (WhatsApp)</td></tr>
+                <tr><td><code>registrarCobrancaEmail</code></td><td><code>registrarCobranca</code></td><td>Writes the date and time to <code>Ultima Cobrança Email</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Logging a follow-up always follows the same sequence:</p>
+          <div class="etapas revelar">
+            <div class="etapa"><div><h4>Validates the parameters</h4><p>tab and sales rep are required; without them, the response is <code>ok: false</code> with the reason</p></div></div>
+            <div class="etapa"><div><h4>Finds the channel column by name</h4><p>if the column doesn't exist yet, it is created at the end of the header</p></div></div>
+            <div class="etapa"><div><h4>Looks up all of the sales rep's rows</h4><p>case-insensitive comparison</p></div></div>
+            <div class="etapa"><div><h4>Writes the date and time on each row</h4><p>in the project's time zone, formatted dd/MM/yyyy HH:mm</p></div></div>
+            <div class="etapa"><div><h4>Forces the write and responds</h4><p><code>SpreadsheetApp.flush()</code> and a response with how many rows were written</p></div></div>
+          </div>
+          <div class="grade g2 revelar">
+            <div class="cartao"><h4>A new column without breaking anything</h4><p>Email follow-ups came after WhatsApp ones. Because the column is located by name and created if missing, older tabs keep working without manual adjustments.</p></div>
+            <div class="cartao"><h4>Deploying without changing the URL</h4><p>Each change becomes a new version of the same deployment, and the URL used by the dashboard stays the same.</p></div>
+          </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="capitulo" id="c05">
+          <span class="rotulo-cap">05 · Indicators</span>
+          <h2>Five cards, every line a filter.</h2>
+          <p>The indicators are calculated in the browser from the month's rows. The rules are explicit in the code, and some of them were business decisions:</p>
+          <div class="grade g2 revelar">
+            <div class="cartao azul"><span class="num">RECEIVED</span><h4>Sim + Fora do Prazo</h4><p>Received is whatever arrived, on time or late. <strong>Sem Vendas</strong> (no sales) is left out of this total and gets its own line on the total card.</p></div>
+            <div class="cartao vermelho"><span class="num">AWAITING</span><h4>Total − received − no sales</h4><p>The stores that haven't sent anything yet. These are the ones that get followed up, marked as <code>Não</code> in the Recebido column.</p></div>
+            <div class="cartao verde"><span class="num">PROCESSING</span><h4>Completed, paused and pending</h4><p>Pending processing means a report that has already arrived (Sim or Fora do Prazo) and is still marked Não Iniciado (not started).</p></div>
+            <div class="cartao violeta"><span class="num">BI</span><h4>Available, in progress, unavailable</h4><p>How much of the month is already in the Totvs Dashboard, with “Indisponível” spelled with or without the accent treated as the same value.</p></div>
+          </div>
+          <p>The fifth card isolates <strong>reports with a product demonstrator</strong> (the <code>Fluxo Agenda</code> column): arrived, pending, completed, paused and the percentage received. Below the cards, a progress bar stacks completed, paused and awaiting, and two panels show the date of the last email notice and the last WhatsApp follow-up, read from the spreadsheet itself.</p>
+          <p class="destaque revelar">Sixteen different breakdowns fit into five cards, and any of them becomes, with one click, the exact list of stores behind the number.</p>
+        </section>
+
+        <!-- 06 -->
+        <section class="capitulo" id="c06">
+          <span class="rotulo-cap">06 · Front end</span>
+          <h2>One page, filters that stack.</h2>
+          <p>The interface is a single HTML file with CSS and plain JavaScript, no framework. The card filter stacks with the column filters, and everything active shows up as a pill at the top, removable one by one or with “Limpar todos” (clear all).</p>
+          <div class="grade g3 revelar">
+            <div class="cartao azul"><h4>Global search</h4><p>Searches the text across all of a row's columns at once.</p></div>
+            <div class="cartao azul"><h4>Seven column filters</h4><p>Multi-select with built-in search, plus “Selecionar todos” (select all) and “Limpar” (clear) in each list.</p></div>
+            <div class="cartao azul"><h4>Click on a cell</h4><p>Clicking a sales rep's, store's or product demonstrator's name in the table turns on the filter for that value.</p></div>
+            <div class="cartao verde"><h4>Sorting and pages</h4><p>Any column sorts using Portuguese alphabetical order; the table pages in sets of 50.</p></div>
+            <div class="cartao verde"><h4>Silent refresh</h4><p>Every 5 seconds the tab is reread without clearing filters or sorting or changing the month, with the time of the last refresh shown at the top.</p></div>
+            <div class="cartao ambar"><h4>Export</h4><p>Excel (SheetJS), CSV with a BOM and semicolon separators, or PDF through the browser's print dialog; filtered rows or the whole tab.</p></div>
+          </div>
+          <div class="galeria revelar">
+            <figure><img src="../assets/painel-filtros.jpg" alt="Dashboard with the Aguardando (awaiting) card and one sales rep selected, active filter pills at the top" loading="lazy" width="1440" height="900"><figcaption>Card filter + column filter, with the active pills at the top.</figcaption></figure>
+            <figure><img src="../assets/painel-tabela.jpg" alt="Store table with legal name, trade name, sales rep, product demonstrator, received, status, dashboard and follow-up dates" loading="lazy" width="1440" height="900"><figcaption>Table: nine columns, status shown as colored tags.</figcaption></figure>
+            <figure><img src="../assets/painel-cobranca.jpg" alt="WhatsApp follow-up window with the message template and pending stores grouped by sales rep" loading="lazy" width="1440" height="900"><figcaption>Follow-up: pending reports grouped by sales rep.</figcaption></figure>
+            <figure><img src="../assets/painel-exportar.jpg" alt="Export window with a choice of format (Excel, CSV or PDF) and scope (filtered or all)" loading="lazy" width="1440" height="900"><figcaption>Export: data format and scope.</figcaption></figure>
+          </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="capitulo" id="c07">
+          <span class="rotulo-cap">07 · Follow-up</span>
+          <h2>One message per sales rep, not per store.</h2>
+          <p>The “Cobrar Relatórios Pendentes” (follow up on pending reports) button shows how many stores are still missing for the month. When opened, the dashboard groups the awaiting stores by sales rep, fetches the phone numbers from the <code>Representantes</code> tab and builds a message with the rep's first name and the list of stores.</p>
+          <div class="etapas revelar">
+            <div class="etapa"><div><h4>List review</h4><p>message template, total sales reps and stores, and a warning about anyone without a phone number (they will be skipped)</p></div></div>
+            <div class="etapa"><div><h4>Guided sending</h4><p>“Enviar agora” (send now) opens WhatsApp Web with the number (prefixed with 55) and the text ready</p></div></div>
+            <div class="etapa"><div><h4>Log and next</h4><p>“Próximo” (next) logs the follow-up in the spreadsheet and moves on to the next sales rep, with a progress bar</p></div></div>
+            <div class="etapa"><div><h4>Wrap-up</h4><p>the last send logs and closes the run with the total number of sales reps notified</p></div></div>
+          </div>
+          <p>The general notice to sales reps goes out by email, through a <strong>4-step wizard</strong> that prepares everything to paste into webmail: recipients, subject, body and sending. When it finishes, the email follow-up is logged in the spreadsheet for each sales rep.</p>
+          <div class="grade g3 revelar">
+            <div class="cartao"><span class="num">DEADLINE</span><h4>Text that follows the calendar</h4><p>The deadline is the 10th. The email body changes depending on whether the deadline is today, tomorrow, already past or still ahead, and the subject includes the reference month (the previous month).</p></div>
+            <div class="cartao"><span class="num">COPY</span><h4>Formatting preserved</h4><p>The body is copied as HTML and plain text at the same time (<code>ClipboardItem</code>), with two fallbacks in case the browser doesn't allow it.</p></div>
+            <div class="cartao"><span class="num">TIME</span><h4>Timeout</h4><p>Fetching the emails has a 10-second timeout (<code>AbortController</code>), with a clear message if the Apps Script doesn't respond.</p></div>
+          </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="capitulo" id="c08">
+          <span class="rotulo-cap">08 · Production and demo</span>
+          <h2>On the team's spreadsheet; here, in the browser.</h2>
+          <div class="arquitetura revelar">
+            <div class="caixa"><span class="tag">Browser</span><b>Front end</b><ul><li>HTML, CSS and plain JS</li><li>exports Excel, CSV and PDF</li></ul></div>
+            <div class="seta">⇄</div>
+            <div class="caixa"><span class="tag">Google Apps Script</span><b>Web app</b><ul><li><code>doGet</code> with 6 actions</li><li>JSON responses</li><li>logs the follow-ups</li></ul></div>
+            <div class="seta">⇄</div>
+            <div class="caixa"><span class="tag">Google Sheets</span><b>Data</b><ul><li>one tab per month</li><li>Representantes tab</li></ul></div>
+          </div>
+          <p>This demo has no spreadsheet and no Apps Script. The dashboard runs in <strong>portfolio mode</strong>: three months of fictional stores, sales reps and product demonstrators are generated right in the browser, and auto-refresh is turned off. Cards, filters, table, sorting, export and building the follow-up all work normally; the steps that depend on the Apps Script (phone numbers, emails and logging follow-ups) have no data source. The original backend is in the repository, in <code>apps-script_6.js</code>.</p>
+          <h3>Technologies</h3>
+          <div class="pilulas">
+            <span>Google Apps Script</span><span>Google Sheets</span><span>Framework-free JavaScript</span><span>HTML and CSS</span><span>SheetJS (XLSX)</span><span>Clipboard API</span><span>WhatsApp Web</span><span>GitHub Pages</span>
+          </div>
+          <div class="encerramento revelar">
+            <span class="rotulo-cap">Try it</span>
+            <h2>Click “Aguardando” and see who's missing.</h2>
+            <p class="texto">Suggested path: on the Total card, click Aguardando (awaiting); then click a sales rep's name in the table. Open “Cobrar Relatórios Pendentes” to see the stores grouped, and finish by exporting the selection to Excel.</p>
+            <div class="acoes"><a class="btn primario" href="../painel/">Open the dashboard →</a><a class="btn" href="https://github.com/lariantunez/painel-acompanhamento-relatorios-sellout">View the code</a></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><strong>Larissa Antunez</strong> · Analytics &amp; Development</span>
+      <span>Real project · demo with fictional data</span>
+    </div>
+  </footer>
+  <script src="../assets/estudo.js"></script>
+</body>
+</html>
