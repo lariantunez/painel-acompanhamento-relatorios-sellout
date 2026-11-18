@@ -295,6 +295,7 @@ td span.clickable:hover { color: #3f51b5; border-color: #3f51b5; }
   gap: 6px; transition: opacity .15s; white-space: nowrap;
 }
 .btn-cobrancas:hover { opacity: .88; }
+.btn-cobrancas.retro { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
 .btn-cobrancas .cob-badge {
   background: rgba(0,0,0,.22); border-radius: 10px;
   padding: 1px 6px; font-size: 11px; font-weight: 800;
@@ -451,6 +452,9 @@ td span.clickable:hover { color: #3f51b5; border-color: #3f51b5; }
   <span class="month-info" id="month-info">(886 registros)</span>
   <button class="btn-cobrancas" onclick="abrirCob()" id="btn-cob" style="">
     ðŸ“² Cobrar RelatÃ³rios Pendentes <span class="cob-badge" id="cob-badge-count" style="background: rgba(0, 0, 0, 0.22);">762</span>
+  </button>
+  <button class="btn-cobrancas retro" onclick="abrirCobRetro()" id="btn-cob-retro" title="Cobra pelo WhatsApp os relatórios não recebidos em meses anteriores do ano, agrupados pelo representante atual de cada loja">
+    🕓 Cobrança Retroativa
   </button>
   <button class="btn-email-aviso" onclick="abrirEmailAviso()" id="btn-email-aviso" style="">
     âœ‰ï¸ Avisar Representantes
@@ -7661,6 +7665,122 @@ let _cobGrupos   = [];
 let _cobIdx      = 0;
 let _cobTelefones = {};
 let _cobDisparando = false;
+let _cobModo = 'mes'; // 'mes' = cobrança do mês selecionado | 'retro' = cobrança retroativa
+
+// ── COBRANÇA RETROATIVA ─────────────────────────────────
+// Mesma lógica da aba "Pendências_Reps": percorre as abas do ano corrente
+// (mesmo ano da aba mais recente), pega as lojas com Recebido = "Não" nos meses
+// ANTERIORES ao mês mais recente (o mês atual já é cobrado pelo botão normal)
+// e agrupa pelo representante ATUAL da loja. Só entram lojas presentes no mês
+// mais recente (lojas que fecharam no período ficam de fora).
+const MESES_ORDEM = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function isRecebidoNao(r) {
+  const v = (r['Recebido'] || '').toString().trim().toUpperCase();
+  return v === 'NÃO' || v === 'NAO' || v === 'N';
+}
+
+async function abrirCobRetro() {
+  _cobModo = 'retro';
+  _cobDisparando = false; _cobIdx = 0;
+  document.getElementById('cob-titulo').textContent = '🕓 Cobrança Retroativa (WhatsApp)';
+  document.getElementById('cob-overlay').classList.add('aberto');
+  document.getElementById('cob-footer').innerHTML = '<span class="cob-footer-info">Aguarde...</span>';
+
+  const ultima = TABS[TABS.length - 1];
+  if (!ultima) {
+    document.getElementById('cob-body').innerHTML = '<div class="cob-estado">⚠️ Lista de meses ainda não carregada.</div>';
+    document.getElementById('cob-footer').innerHTML = '<button class="btn-cob-cancelar" onclick="fecharCob()">Fechar</button>';
+    return;
+  }
+  const ano = ultima.sheet.split('_')[0];
+  const abasAno = TABS.filter(t => t.sheet.split('_')[0] === ano)
+    .sort((a,b) => MESES_ORDEM.indexOf(a.sheet.split('_')[1]) - MESES_ORDEM.indexOf(b.sheet.split('_')[1]));
+  const abasRetro = abasAno.filter(t => t.sheet !== ultima.sheet);
+
+  if (!abasRetro.length) {
+    document.getElementById('cob-tab-label').textContent = '';
+    document.getElementById('cob-body').innerHTML = '<div class="cob-estado">Ainda não há meses anteriores no ano para cobrar.</div>';
+    document.getElementById('cob-footer').innerHTML = '<button class="btn-cob-cancelar" onclick="fecharCob()">Fechar</button>';
+    return;
+  }
+  document.getElementById('cob-tab-label').textContent =
+    `Lojas ativas em ${ultima.label} com pendências de ${abasRetro[0].label} a ${abasRetro[abasRetro.length-1].label} · representante atual`;
+
+  // Carrega todas as abas do ano (usa cache quando já carregada)
+  let carregadas = 0;
+  const renderProg = () => {
+    document.getElementById('cob-body').innerHTML =
+      `<div class="cob-estado">⏳ Lendo histórico do ano... (${carregadas}/${abasAno.length} meses)</div>`;
+  };
+  renderProg();
+  let dados;
+  try {
+    dados = await Promise.all(abasAno.map(async t => {
+      const rows = cache[t.sheet] || await fetchData(t.sheet);
+      cache[t.sheet] = rows;
+      carregadas++; renderProg();
+      return { tab: t, rows };
+    }));
+  } catch(e) {
+    document.getElementById('cob-body').innerHTML = `<div class="cob-estado">❌ Erro ao ler os meses: ${escHtml(e.message)}</div>`;
+    document.getElementById('cob-footer').innerHTML = '<button class="btn-cob-cancelar" onclick="fecharCob()">Fechar</button>';
+    return;
+  }
+
+  // Monta histórico por loja (chave = Id_Cliente; fallback = nome)
+  const lojas = {};
+  dados.forEach(({ tab, rows }) => {
+    const mes = tab.sheet.split('_')[1];
+    const ordem = MESES_ORDEM.indexOf(mes);
+    rows.forEach(r => {
+      const nome = (r['Nome Fantasia'] || r['Razão Social'] || '').trim();
+      const id   = (r['Id_Cliente'] || '').trim() || nome;
+      if (!id) return;
+      const rep = (r['Representante'] || '').trim();
+      if (!lojas[id]) lojas[id] = { nome, rep: '', ordemRep: -1, faltando: [] };
+      const L = lojas[id];
+      // Representante atual = o do mês mais recente em que a loja aparece
+      if (rep && ordem >= L.ordemRep) { L.rep = rep; L.ordemRep = ordem; if (nome) L.nome = nome; }
+      if (tab.sheet !== ultima.sheet && isRecebidoNao(r) && !L.faltando.includes(mes)) L.faltando.push(mes);
+    });
+  });
+
+  // Só cobra lojas que existem no mês atual (aba mais recente) — evita lojas que fecharam
+  const ordemAtual = MESES_ORDEM.indexOf(ultima.sheet.split('_')[1]);
+
+  const mapa = {};
+  Object.values(lojas).forEach(L => {
+    if (!L.faltando.length || !L.rep) return;
+    if (L.ordemRep !== ordemAtual) return; // loja não aparece no mês atual
+
+    L.faltando.sort((a,b) => MESES_ORDEM.indexOf(a) - MESES_ORDEM.indexOf(b));
+    if (!mapa[L.rep]) mapa[L.rep] = { representante: L.rep, lojas: [], _qtd: [] };
+    mapa[L.rep].lojas.push(`${L.nome} | ${L.faltando.join(', ')}`);
+    mapa[L.rep]._qtd.push(L.faltando.length);
+  });
+  _cobGrupos = Object.values(mapa)
+    .map(g => { // lojas com mais meses faltando primeiro
+      const idx = g.lojas.map((_, i) => i).sort((a,b) => g._qtd[b] - g._qtd[a] || g.lojas[a].localeCompare(g.lojas[b]));
+      return { representante: g.representante, lojas: idx.map(i => g.lojas[i]) };
+    })
+    .sort((a,b) => a.representante.localeCompare(b.representante));
+
+  if (!_cobGrupos.length) {
+    document.getElementById('cob-body').innerHTML = '<div class="cob-estado">✅ Nenhum relatório pendente nos meses anteriores!</div>';
+    document.getElementById('cob-footer').innerHTML = '<button class="btn-cob-cancelar" onclick="fecharCob()">Fechar</button>';
+    return;
+  }
+
+  document.getElementById('cob-body').innerHTML = '<div class="cob-estado">⏳ Buscando telefones dos representantes...</div>';
+  try {
+    const resp = await fetch(`${API_URL}?action=telefones`);
+    const data = await resp.json();
+    _cobTelefones = data.telefones || {};
+  } catch(e) { _cobTelefones = {}; }
+
+  renderTelaLista();
+}
 
 function getPendentesAba() {
   return allData.filter(r => {
@@ -7689,6 +7809,10 @@ function primeiroNome(nomeCompleto) {
 }
 
 function montarMsgCob(g) {
+  if (_cobModo === 'retro') {
+    const listaRetro = g.lojas.map(l => `  • ${l}`).join('\n');
+    return `Oi ${primeiroNome(g.representante)}, tudo bem?\nVou te passar uma relação retroativa de clientes dos quais não recebemos os relatórios em meses passados. É importante termos o histórico completo para as análises em nosso BI.\n\n${listaRetro}`;
+  }
   const lista = g.lojas.map(l => `  â€¢ ${l}`).join('\n');
   return `Oi ${primeiroNome(g.representante)}, tudo bem?\nEstou passando para avisar que ainda nÃ£o recebemos esses relatÃ³rios:\n\n${lista}\n\nPoderia nos enviar o quanto antes? ðŸ˜Š`;
 }
@@ -7698,6 +7822,8 @@ function escHtml(s) {
 }
 
 async function abrirCob() {
+  _cobModo = 'mes';
+  document.getElementById('cob-titulo').textContent = '📲 Cobranças WhatsApp';
   _cobDisparando = false; _cobIdx = 0;
   const tabLabel = TABS.find(t=>t.sheet===activeSheet)?.label || activeSheet;
   document.getElementById('cob-overlay').classList.add('aberto');
@@ -7869,6 +7995,11 @@ async function gravarEConcluir(idx) {
 async function registrarCobrancaSheets(nomeRep, tipo) {
   // tipo: 'whatsapp' (default) ou 'email'
   const acao = (tipo === 'email') ? 'registrarCobrancaEmail' : 'registrarCobranca';
+  // Cobrança retroativa não grava na coluna "Ultima Cobrança" do mês aberto
+  if (tipo !== 'email' && _cobModo === 'retro') {
+    cobToast(`🕓 Cobrança retroativa enviada para ${nomeRep}`);
+    return;
+  }
   try {
     const params = new URLSearchParams({action: acao, sheet: activeSheet, representante: nomeRep});
     const resp = await fetch(`${API_URL}?${params}`);
@@ -7908,7 +8039,11 @@ function avancarDisparo(proxIdx) { _cobIdx = proxIdx; renderTelaDisparo(); }
 
 function concluirDisparo() {
   const total = _cobGrupos.filter(g => _cobTelefones[g.representante]).length;
-  gravarAvisoWhatsapp();
+  if (_cobModo === 'retro') {
+    try { localStorage.setItem('sellout_retro_ultima', new Date().toLocaleString('pt-BR')); } catch(e) {}
+  } else {
+    gravarAvisoWhatsapp();
+  }
   fecharCob();
   cobToast(`âœ… Disparo concluÃ­do! ${total} representante(s) notificado(s).`);
 }
@@ -8252,7 +8387,7 @@ function downloadBlob(blob, filename) {
   <div class="cob-modal">
     <div class="cob-header">
       <div class="cob-header-left">
-        <h2>ðŸ“² CobranÃ§as WhatsApp</h2>
+        <h2 id="cob-titulo"></h2>
         <p id="cob-tab-label" style="font-size:12px;color:#b45309;margin-top:2px"></p>
       </div>
       <button class="cob-close" onclick="fecharCob()">âœ•</button>

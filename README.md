@@ -17,6 +17,7 @@ Todo mês, a equipe precisa saber quais lojas já mandaram o relatório de venda
 - **API sobre a planilha:** um Google Apps Script publicado como aplicativo web transforma a planilha em uma API JSON, sem servidor para manter.
 - **Cartões que filtram a tela:** 16 recortes clicáveis, e cada número mostra exatamente as lojas por trás dele.
 - **Cobrança em lote:** pendências agrupadas por representante, com mensagem pronta no WhatsApp Web e assistente de e-mail em 4 passos. Cada cobrança grava data e hora na planilha.
+- **Cobrança retroativa:** um segundo botão cobra os relatórios que faltaram nos meses anteriores do ano, só das lojas que continuam ativas, agrupados pelo representante atual de cada loja.
 - **Atualização a cada 5 segundos** sem perder os filtros, e exportação em Excel, CSV e PDF.
 
 ## Decisões técnicas
@@ -46,4 +47,4 @@ npx serve .
 
 ---
 
-**🇺🇸 English:** a dashboard that tracks, month by month, which stores have sent their sell-out reports: on time, late, processed or already in the BI. A Google Apps Script web app turns the spreadsheet into a JSON API with no server to maintain; every number on screen is a clickable filter; and pending stores become batched WhatsApp and e-mail follow-ups that are written back to the sheet. Stack: Google Apps Script, Google Sheets, JavaScript, SheetJS. Portfolio version with fictional data; the original runs in production.
+**🇺🇸 English:** a dashboard that tracks, month by month, which stores have sent their sell-out reports: on time, late, processed or already in the BI. A Google Apps Script web app turns the spreadsheet into a JSON API with no server to maintain; every number on screen is a clickable filter; and pending stores become batched WhatsApp and e-mail follow-ups that are written back to the sheet, including a retroactive follow-up for earlier months, grouped by each store's current sales rep. Stack: Google Apps Script, Google Sheets, JavaScript, SheetJS. Portfolio version with fictional data; the original runs in production.
